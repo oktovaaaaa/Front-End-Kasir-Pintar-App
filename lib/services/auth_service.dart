@@ -16,25 +16,29 @@ class AuthService {
   }) async {
     try {
       final uri = Uri.parse('$_baseUrl/api/auth/register');
+      print('REGISTER URL: $uri');
 
       final response = await http
           .post(
             uri,
             headers: {
               'Accept': 'application/json',
+              'Content-Type': 'application/json',
             },
-            body: {
+            body: jsonEncode({
               'name': name,
               'email': email,
               'phone': phone,
-              'birth_date': birthDate, // pastikan format: YYYY-MM-DD
+              'birth_date': birthDate, // contoh: 2000-10-01
               'password': password,
               'password_confirmation': passwordConfirmation,
-            },
+            }),
           )
           .timeout(const Duration(seconds: 15));
 
-      // coba decode JSON; kalau server balikin HTML error, jangan bikin app crash
+      print('REGISTER STATUS: ${response.statusCode}');
+      print('REGISTER BODY: ${response.body}');
+
       Map<String, dynamic> data;
       try {
         data = json.decode(response.body);
@@ -50,7 +54,7 @@ class AuthService {
         'body': data,
       };
     } catch (e) {
-      // misal koneksi gagal, timeout, dsb.
+      print('REGISTER ERROR: $e');
       return {
         'statusCode': 0,
         'body': {
@@ -66,19 +70,24 @@ class AuthService {
   }) async {
     try {
       final uri = Uri.parse('$_baseUrl/api/auth/login');
+      print('LOGIN URL: $uri');
 
       final response = await http
           .post(
             uri,
             headers: {
               'Accept': 'application/json',
+              'Content-Type': 'application/json',
             },
-            body: {
+            body: jsonEncode({
               'email': email,
               'password': password,
-            },
+            }),
           )
           .timeout(const Duration(seconds: 15));
+
+      print('LOGIN STATUS: ${response.statusCode}');
+      print('LOGIN BODY: ${response.body}');
 
       Map<String, dynamic> data;
       try {
@@ -93,7 +102,7 @@ class AuthService {
       if (response.statusCode == 200) {
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('token', data['token']);
-        await prefs.setString('saved_email', email); // untuk isi otomatis nanti
+        await prefs.setString('saved_email', email);
       }
 
       return {
@@ -101,6 +110,7 @@ class AuthService {
         'body': data,
       };
     } catch (e) {
+      print('LOGIN ERROR: $e');
       return {
         'statusCode': 0,
         'body': {
@@ -124,12 +134,11 @@ class AuthService {
             'Authorization': 'Bearer $token',
           },
         );
-      } catch (_) {
-        // kalau logout ke server gagal, tetap hapus token lokal
+      } catch (e) {
+        print('LOGOUT ERROR: $e');
       }
     }
 
-    // hanya hapus token, biar email masih tersimpan
     await prefs.remove('token');
   }
 
