@@ -1,10 +1,9 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
+import 'pages/onboarding_page.dart';
 import 'pages/login_page.dart';
 import 'pages/home_page.dart';
-import 'pages/onboarding_page.dart';
 import 'services/auth_service.dart';
 
 void main() {
@@ -20,6 +19,8 @@ class KasirRestoApp extends StatefulWidget {
 
 class _KasirRestoAppState extends State<KasirRestoApp> {
   final AuthService _authService = AuthService();
+
+  /// Halaman yang sedang aktif
   Widget _defaultPage =
       const Scaffold(body: Center(child: CircularProgressIndicator()));
 
@@ -28,35 +29,30 @@ class _KasirRestoAppState extends State<KasirRestoApp> {
   @override
   void initState() {
     super.initState();
-    _initAppFlow();
+    _initApp();
   }
 
-  Future<void> _initAppFlow() async {
-    await Future.delayed(const Duration(milliseconds: 500));
-    await _checkLoginStatus();
-  }
-
-  // CEK APAKAH ADA TOKEN
-  Future<void> _checkLoginStatus() async {
-    final token = await _authService.getToken();
+  /// Setiap app baru dibuka lagi (setelah di-kill dari recent), kita:
+  /// 1) paksa logout (hapus token)
+  /// 2) tampilkan OnboardingPage
+  Future<void> _initApp() async {
+    // Pastikan token / sesi lama dibersihkan
+    await _authService.logout();
 
     setState(() {
-      if (token != null) {
-        // User sudah login → masuk ke Home
-        _defaultPage = HomePage(
-          onUserActivity: _resetInactivityTimer,
-          onForceLogout: _forceLogout,
-        );
-
-        _startInactivityTimer();
-      } else {
-        // User belum login → tampilkan Onboarding dulu
-        _defaultPage = OnboardingPage();
-      }
+      // APP SELALU MULAI DARI ONBOARDING -> LOGIN
+      _defaultPage = OnboardingPage(onContinue: _goToLogin);
     });
   }
 
-  // LOGIN SUKSES
+  /// Pindah ke halaman login
+  void _goToLogin() {
+    setState(() {
+      _defaultPage = LoginPage(onLoginSuccess: _onLoginSuccess);
+    });
+  }
+
+  /// Dipanggil ketika login BERHASIL (statusCode == 200 di LoginPage)
   void _onLoginSuccess() {
     setState(() {
       _defaultPage = HomePage(
@@ -64,11 +60,10 @@ class _KasirRestoAppState extends State<KasirRestoApp> {
         onForceLogout: _forceLogout,
       );
     });
-
     _startInactivityTimer();
   }
 
-  // TIMER AUTO LOGOUT 30 MENIT
+  /// Mulai timer auto logout 30 menit
   void _startInactivityTimer() {
     _inactivityTimer?.cancel();
     _inactivityTimer = Timer(const Duration(minutes: 30), () async {
@@ -76,7 +71,7 @@ class _KasirRestoAppState extends State<KasirRestoApp> {
     });
   }
 
-  // RESET TIMER KETIKA USER GERAK
+  /// Reset timer ketika ada aktivitas user (tap / geser)
   void _resetInactivityTimer() {
     if (_inactivityTimer != null && _inactivityTimer!.isActive) {
       _inactivityTimer!.cancel();
@@ -84,7 +79,7 @@ class _KasirRestoAppState extends State<KasirRestoApp> {
     _startInactivityTimer();
   }
 
-  // PAKSA LOGOUT KETIKA 30 MENIT
+  /// Paksa logout -> hapus token + kembali ke login
   Future<void> _forceLogout() async {
     await _authService.logout();
     _inactivityTimer?.cancel();
@@ -95,7 +90,14 @@ class _KasirRestoAppState extends State<KasirRestoApp> {
   }
 
   @override
+  void dispose() {
+    _inactivityTimer?.cancel();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    // GestureDetector global untuk deteksi aktivitas user di seluruh app
     return GestureDetector(
       behavior: HitTestBehavior.translucent,
       onTap: _resetInactivityTimer,

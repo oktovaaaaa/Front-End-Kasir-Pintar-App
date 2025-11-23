@@ -1,4 +1,7 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import '../services/auth_service.dart';
 
 class RegisterPage extends StatefulWidget {
@@ -22,6 +25,10 @@ class _RegisterPageState extends State<RegisterPage> {
   bool _isLoading = false;
   String? _message;
 
+  // ==== FOTO PROFIL (OPSIONAL) ====
+  final ImagePicker _picker = ImagePicker();
+  XFile? _pickedImage; // kalau null, tampilkan icon user
+
   @override
   void dispose() {
     _nameController.dispose();
@@ -31,6 +38,61 @@ class _RegisterPageState extends State<RegisterPage> {
     _passwordController.dispose();
     _passwordConfirmController.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickImage(ImageSource source) async {
+    final picked = await _picker.pickImage(
+      source: source,
+      imageQuality: 70,
+    );
+    if (picked != null) {
+      setState(() {
+        _pickedImage = picked;
+      });
+    }
+  }
+
+  void _showPickImageSheet() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) {
+        return SafeArea(
+          child: Wrap(
+            children: [
+              ListTile(
+                leading: const Icon(Icons.photo_library_outlined),
+                title: const Text('Pilih dari Galeri'),
+                onTap: () {
+                  Navigator.of(ctx).pop();
+                  _pickImage(ImageSource.gallery);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_camera_outlined),
+                title: const Text('Ambil dari Kamera'),
+                onTap: () {
+                  Navigator.of(ctx).pop();
+                  _pickImage(ImageSource.camera);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.delete_outline),
+                title: const Text('Hapus foto (kosongkan)'),
+                onTap: () {
+                  Navigator.of(ctx).pop();
+                  setState(() {
+                    _pickedImage = null;
+                  });
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   Future<void> _register() async {
@@ -50,6 +112,8 @@ class _RegisterPageState extends State<RegisterPage> {
       birthDate: _birthDateController.text.trim(),
       password: _passwordController.text,
       passwordConfirmation: _passwordConfirmController.text,
+      // kalau nanti API-nya sudah siap, bisa kirim path / file:
+      // profileImagePath: _pickedImage?.path,
     );
 
     final statusCode = result['statusCode'] ?? 0;
@@ -58,8 +122,8 @@ class _RegisterPageState extends State<RegisterPage> {
     String message;
 
     if (statusCode == 201) {
-      message = body['message'] ??
-          'Registrasi berhasil. Menunggu persetujuan admin.';
+      message =
+          body['message'] ?? 'Registrasi berhasil. Menunggu persetujuan admin.';
       setState(() {
         _isLoading = false;
         _message = message;
@@ -124,6 +188,46 @@ class _RegisterPageState extends State<RegisterPage> {
                   ),
                 ),
                 const SizedBox(height: 20),
+
+                // ===== AVATAR SEPERTI DESAIN, OPSIONAL =====
+                Center(
+                  child: Stack(
+                    children: [
+                      CircleAvatar(
+                        radius: 48,
+                        backgroundColor: const Color(0xFFE0E6FF),
+                        backgroundImage: _pickedImage != null
+                            ? FileImage(File(_pickedImage!.path))
+                            : null,
+                        child: _pickedImage == null
+                            ? const Icon(
+                                Icons.person_outline,
+                                size: 48,
+                                color: Color(0xFF9FA8DA),
+                              )
+                            : null,
+                      ),
+                      Positioned(
+                        bottom: 0,
+                        right: 0,
+                        child: InkWell(
+                          onTap: _showPickImageSheet,
+                          child: CircleAvatar(
+                            radius: 16,
+                            backgroundColor: const Color(0xFF5C6BC0),
+                            child: const Icon(
+                              Icons.edit,
+                              size: 16,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 24),
+
                 if (_message != null)
                   Padding(
                     padding: const EdgeInsets.only(bottom: 12),
@@ -136,6 +240,7 @@ class _RegisterPageState extends State<RegisterPage> {
                       ),
                     ),
                   ),
+
                 Container(
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(

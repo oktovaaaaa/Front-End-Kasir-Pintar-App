@@ -2,26 +2,28 @@ import 'package:flutter/material.dart';
 import 'login_page.dart';
 
 class OnboardingPage extends StatelessWidget {
-  const OnboardingPage({super.key});
+  /// Dipanggil ketika user menekan tombol "Mulai"
+  final VoidCallback onContinue;
+
+  const OnboardingPage({super.key, required this.onContinue});
 
   @override
   Widget build(BuildContext context) {
     final media = MediaQuery.of(context);
     final size = media.size;
+
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FB),
       body: SafeArea(
         child: Column(
           children: [
-            // logo + ilustrasi (sementara pakai icon)
+            // Bagian atas: logo + teks
             Expanded(
               flex: 3,
               child: Container(
                 width: double.infinity,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 16,
-                ),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -56,7 +58,7 @@ class OnboardingPage extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Kelola transaksi kasir restoranmu dengan cepat,\naman, dan terkontrol oleh admin.',
+                      'Aplikasi kasir khusus restoran.\nKasir login setelah akun disetujui admin.',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 14,
@@ -69,7 +71,7 @@ class OnboardingPage extends StatelessWidget {
               ),
             ),
 
-            // card bawah + tombol continue / sign in
+            // Bagian bawah: card + tombol "Mulai"
             Expanded(
               flex: 2,
               child: Container(
@@ -85,10 +87,8 @@ class OnboardingPage extends StatelessWidget {
                     ),
                   ],
                 ),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24.0,
-                  vertical: 24,
-                ),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -102,7 +102,7 @@ class OnboardingPage extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Kasir dapat login setelah akun disetujui oleh admin restoran.',
+                      'Kelola transaksi kasir dengan mudah.\nAdmin mengontrol dan menyetujui semua kasir.',
                       style: TextStyle(
                         fontSize: 14,
                         color: Colors.grey.shade600,
@@ -113,19 +113,7 @@ class OnboardingPage extends StatelessWidget {
                       width: double.infinity,
                       height: 52,
                       child: ElevatedButton(
-                        onPressed: () {
-                          // arahkan ke halaman login
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (_) => LoginPage(
-                                onLoginSuccess: () {
-                                  // setelah sukses login kamu bisa ganti
-                                  // dengan pushReplacement ke HomePage di main.dart
-                                },
-                              ),
-                            ),
-                          );
-                        },
+                        onPressed: onContinue, // <- panggil callback dari main.dart
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF1F2C46),
                           shape: RoundedRectangleBorder(
