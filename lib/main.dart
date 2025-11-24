@@ -5,10 +5,16 @@ import 'pages/onboarding_page.dart';
 import 'pages/login_page.dart';
 import 'pages/home_page.dart';
 import 'services/auth_service.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
-void main() {
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await initializeDateFormatting('id_ID', null);
   runApp(const KasirRestoApp());
 }
+
+
 
 class KasirRestoApp extends StatefulWidget {
   const KasirRestoApp({super.key});

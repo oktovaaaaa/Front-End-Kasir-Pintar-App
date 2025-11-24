@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
-
+import 'sales_page.dart';
 import 'products_page.dart';
+import 'sales_history_page.dart';
+import 'reports_page.dart';
+import 'customers_page.dart';
+
 
 class HomePage extends StatefulWidget {
   final VoidCallback onUserActivity;
@@ -70,8 +74,8 @@ class _HomePageState extends State<HomePage> {
                     icon: Icons.shopping_cart, label: 'Transaksi', index: 1),
                 _centerProductItem(),
                 _bottomItem(
-                    icon: Icons.account_balance_wallet,
-                    label: 'Kasbon',
+                    icon: Icons.bar_chart,
+                    label: 'Keuangan',
                     index: 3),
                 _bottomItem(
                     icon: Icons.people, label: 'Pelanggan', index: 4),
@@ -92,31 +96,31 @@ class _HomePageState extends State<HomePage> {
       case 2:
         return 'Manajemen Produk';
       case 3:
-        return 'Kasbon';
+        return 'Laporan Keuangan';
       case 4:
-        return 'Laporan & Pelanggan';
+        return 'Pelanggan';
       default:
         return 'Kasir Pintar';
     }
   }
 
   Widget _buildBody() {
-    switch (_bottomIndex) {
-      case 0:
-        return const Center(child: Text('Halaman Riwayat Transaksi (stub)'));
-      case 1:
-        return const Center(child: Text('Halaman Transaksi Penjualan (stub)'));
-      case 2:
-        return ProductsPage(onUserActivity: _handleUserActivity);
-      case 3:
-        return const Center(child: Text('Halaman Kasbon (stub)'));
-      case 4:
-        return const Center(
-            child: Text('Laporan Keuangan & Manajemen Pelanggan (stub)'));
-      default:
-        return _dashboardContent();
-    }
+  switch (_bottomIndex) {
+    case 0:
+      return SalesHistoryPage(onUserActivity: _handleUserActivity);
+    case 1:
+      return SalesPage(onUserActivity: _handleUserActivity);
+    case 2:
+      return ProductsPage(onUserActivity: _handleUserActivity);
+    case 3:
+      return ReportsPage(onUserActivity: _handleUserActivity);
+    case 4:
+      return CustomersPage(onUserActivity: _handleUserActivity);
+    default:
+      return _dashboardContent();
   }
+}
+
 
   Widget _dashboardContent() {
     return SingleChildScrollView(

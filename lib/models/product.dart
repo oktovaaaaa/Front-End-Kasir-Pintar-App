@@ -3,8 +3,9 @@ class Product {
   final String name;
   final int? categoryId;
   final String? categoryName;
+  final int price;       // harga jual (dalam rupiah, tanpa koma)
+  final int costPrice;   // harga modal
   final int stock;
-  final double price;
   final String? description;
   final String? imageUrl;
 
@@ -13,57 +14,43 @@ class Product {
     required this.name,
     this.categoryId,
     this.categoryName,
-    required this.stock,
     required this.price,
+    required this.costPrice,
+    required this.stock,
     this.description,
     this.imageUrl,
   });
 
-  // BACA DARI API
-  factory Product.fromJson(Map<String, dynamic> json) {
-    // id bisa juga dikirim sebagai String, kita amankan
-    final dynamic idRaw = json['id'];
-    final int idParsed =
-        idRaw == null ? 0 : int.tryParse(idRaw.toString()) ?? 0;
+  // helper untuk parse angka dari JSON (bisa "12500.00", 12500, 12500.0)
+  static int _parseInt(dynamic value) {
+    if (value == null) return 0;
 
-    // category_id dari backend kadang String → parse aman
-    final dynamic catIdRaw = json['category_id'];
-    final int? catIdParsed = catIdRaw == null
-        ? null
-        : int.tryParse(catIdRaw.toString());
+    if (value is int) return value;
+    if (value is double) return value.round();
 
-    // price & stock juga kita parse aman
-    final dynamic priceRaw = json['price'];
-    final double priceParsed =
-        priceRaw == null ? 0.0 : double.tryParse(priceRaw.toString()) ?? 0.0;
+    final s = value.toString();
 
-    final dynamic stockRaw = json['stock'];
-    final int stockParsed =
-        stockRaw == null ? 0 : int.tryParse(stockRaw.toString()) ?? 0;
+    // pertama coba parse sebagai double dulu (buat kasus "12500.00")
+    final d = double.tryParse(s);
+    if (d != null) return d.round();
 
-    final category = json['category'];
-
-    return Product(
-      id: idParsed,
-      name: json['name']?.toString() ?? '',
-      categoryId: catIdParsed,
-      categoryName: category != null ? category['name']?.toString() : null,
-      stock: stockParsed,
-      price: priceParsed,
-      description: json['description']?.toString(),
-      imageUrl: json['image_url']?.toString(),
-    );
+    // fallback terakhir: coba parse int biasa
+    return int.tryParse(s) ?? 0;
   }
 
-  // KIRIM KE API
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'name': name,
-      'category_id': categoryId,
-      'stock': stock,
-      'price': price,
-      'description': description,
-    };
+  factory Product.fromJson(Map<String, dynamic> json) {
+    return Product(
+      id: int.tryParse(json['id'].toString()) ?? 0,
+      name: json['name']?.toString() ?? '',
+      categoryId: json['category_id'] == null
+          ? null
+          : int.tryParse(json['category_id'].toString()),
+      categoryName: json['category']?['name']?.toString(),
+      price: _parseInt(json['price']),
+      costPrice: _parseInt(json['cost_price']),
+      stock: _parseInt(json['stock']),
+      description: json['description']?.toString(),
+      imageUrl: json['image_url']?.toString() ?? json['image_path']?.toString(),
+    );
   }
 }

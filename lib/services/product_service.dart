@@ -7,7 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/product.dart';
 
 class ProductService {
-  // GANTI baseUrl sesuai IP backend kamu
+  // SESUAIKAN kalau base URL kamu beda
   static const String baseUrl = 'http://10.0.2.2:8000/api';
 
   Future<String?> _getToken() async {
@@ -15,6 +15,7 @@ class ProductService {
     return prefs.getString('token');
   }
 
+  // GET /api/products
   Future<List<Product>> getProducts() async {
     final token = await _getToken();
 
@@ -34,10 +35,12 @@ class ProductService {
     }
   }
 
+  // POST /api/products
   Future<Product> createProduct({
     required String name,
+    required int price,        // harga jual
+    required int costPrice,    // harga modal
     required int stock,
-    required double price,
     int? categoryId,
     String? description,
     File? imageFile,
@@ -45,16 +48,12 @@ class ProductService {
     final token = await _getToken();
 
     final uri = Uri.parse('$baseUrl/products');
-    final request = http.MultipartRequest('POST', uri)
-      ..headers['Accept'] = 'application/json';
-
-    if (token != null) {
-      request.headers['Authorization'] = 'Bearer $token';
-    }
+    final request = http.MultipartRequest('POST', uri);
 
     request.fields['name'] = name;
-    request.fields['stock'] = stock.toString();
     request.fields['price'] = price.toString();
+    request.fields['cost_price'] = costPrice.toString();
+    request.fields['stock'] = stock.toString();
     if (categoryId != null) {
       request.fields['category_id'] = categoryId.toString();
     }
@@ -68,21 +67,29 @@ class ProductService {
       );
     }
 
-    final streamedResponse = await request.send();
-    final response = await http.Response.fromStream(streamedResponse);
+    request.headers['Accept'] = 'application/json';
+    if (token != null) {
+      request.headers['Authorization'] = 'Bearer $token';
+    }
+
+    final streamed = await request.send();
+    final response = await http.Response.fromStream(streamed);
 
     if (response.statusCode == 201) {
-      return Product.fromJson(jsonDecode(response.body));
+      final data = jsonDecode(response.body);
+      return Product.fromJson(data);
     } else {
       throw Exception('Gagal menambah produk (${response.statusCode})');
     }
   }
 
+  // PUT /api/products/{id}
   Future<Product> updateProduct({
     required int id,
     required String name,
+    required int price,
+    required int costPrice,
     required int stock,
-    required double price,
     int? categoryId,
     String? description,
     File? imageFile,
@@ -90,17 +97,13 @@ class ProductService {
     final token = await _getToken();
 
     final uri = Uri.parse('$baseUrl/products/$id');
-    final request = http.MultipartRequest('POST', uri)
-      ..headers['Accept'] = 'application/json'
-      ..fields['_method'] = 'PUT'; // spoofing method PUT
-
-    if (token != null) {
-      request.headers['Authorization'] = 'Bearer $token';
-    }
+    final request = http.MultipartRequest('POST', uri);
+    request.fields['_method'] = 'PUT';
 
     request.fields['name'] = name;
-    request.fields['stock'] = stock.toString();
     request.fields['price'] = price.toString();
+    request.fields['cost_price'] = costPrice.toString();
+    request.fields['stock'] = stock.toString();
     if (categoryId != null) {
       request.fields['category_id'] = categoryId.toString();
     }
@@ -114,16 +117,23 @@ class ProductService {
       );
     }
 
-    final streamedResponse = await request.send();
-    final response = await http.Response.fromStream(streamedResponse);
+    request.headers['Accept'] = 'application/json';
+    if (token != null) {
+      request.headers['Authorization'] = 'Bearer $token';
+    }
+
+    final streamed = await request.send();
+    final response = await http.Response.fromStream(streamed);
 
     if (response.statusCode == 200) {
-      return Product.fromJson(jsonDecode(response.body));
+      final data = jsonDecode(response.body);
+      return Product.fromJson(data);
     } else {
       throw Exception('Gagal mengupdate produk (${response.statusCode})');
     }
   }
 
+  // DELETE /api/products/{id}
   Future<void> deleteProduct(int id) async {
     final token = await _getToken();
 
@@ -135,8 +145,13 @@ class ProductService {
       },
     );
 
-    if (response.statusCode != 200) {
-      throw Exception('Gagal menghapus produk (${response.statusCode})');
+    if (response.statusCode != 200 && response.statusCode != 204) {
+      try {
+        final data = jsonDecode(response.body);
+        throw Exception(data['message'] ?? 'Gagal menghapus produk');
+      } catch (_) {
+        throw Exception('Gagal menghapus produk (${response.statusCode})');
+      }
     }
   }
 }

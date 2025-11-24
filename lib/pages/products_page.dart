@@ -59,27 +59,30 @@ class _ProductsPageState extends State<ProductsPage> {
     );
   }
 
-  Future<void> _showProductForm({Product? product}) async {
+  /// ====== BOTTOM SHEET FORM PRODUK ======
+  Future<void> _openProductForm({Product? product}) async {
     widget.onUserActivity();
 
     final isEdit = product != null;
 
     final nameController = TextEditingController(text: product?.name ?? '');
+    final costPriceController = TextEditingController(
+        text: product != null ? product.costPrice.toString() : '');
     final priceController = TextEditingController(
-        text: product != null ? product.price.toStringAsFixed(0) : '');
+        text: product != null ? product.price.toString() : '');
     final stockController = TextEditingController(
         text: product != null ? product.stock.toString() : '');
-    final descriptionController =
+    final descController =
         TextEditingController(text: product?.description ?? '');
 
     int? selectedCategoryId = product?.categoryId;
-    File? pickedImageFile;
+    File? pickedImage;
 
     final formKey = GlobalKey<FormState>();
     final picker = ImagePicker();
 
-    // fungsi untuk tambah kategori baru dari dalam dialog produk
-    Future<void> _handleAddCategory(StateSetter setStateDialog) async {
+    // fungsi untuk tambah kategori baru dari dalam bottom sheet
+    Future<void> _handleAddCategory(StateSetter setStateSheet) async {
       final catNameController = TextEditingController();
       final catDescController = TextEditingController();
       final catFormKey = GlobalKey<FormState>();
@@ -145,81 +148,116 @@ class _ProductsPageState extends State<ProductsPage> {
       );
 
       if (newCategory != null) {
-        // update list kategori di halaman
-        setState(() {
-          _categories.add(newCategory);
-        });
-        // pilih kategori baru di dialog produk
-        setStateDialog(() {
+        if (mounted) {
+          setState(() {
+            _categories.add(newCategory);
+          });
+        }
+        setStateSheet(() {
           selectedCategoryId = newCategory.id;
         });
       }
     }
 
-    final bool? result = await showDialog<bool>(
+    final result = await showModalBottomSheet<bool>(
       context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
       builder: (context) {
         return StatefulBuilder(
-          builder: (context, setStateDialog) {
-            return AlertDialog(
-              title: Text(isEdit ? 'Edit Produk' : 'Tambah Produk'),
-              content: SingleChildScrollView(
+          builder: (context, setStateSheet) {
+            return Padding(
+              padding: EdgeInsets.only(
+                left: 16,
+                right: 16,
+                top: 16,
+                bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+              ),
+              child: SingleChildScrollView(
                 child: Form(
                   key: formKey,
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // FOTO
-                      GestureDetector(
-                        onTap: () async {
-                          final XFile? picked = await picker.pickImage(
-                            source: ImageSource.gallery,
-                          );
-                          if (picked != null) {
-                            setStateDialog(() {
-                              pickedImageFile = File(picked.path);
-                            });
-                          }
-                        },
-                        child: Column(
-                          children: [
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(12),
-                              child: SizedBox(
-                                width: 120,
-                                height: 120,
-                                child: pickedImageFile != null
-                                    ? Image.file(
-                                        pickedImageFile!,
-                                        fit: BoxFit.cover,
-                                      )
-                                    : (product?.imageUrl != null
-                                        ? Image.network(
-                                            product!.imageUrl!,
-                                            fit: BoxFit.cover,
-                                          )
-                                        : Container(
-                                            color: Colors.grey[300],
-                                            child: const Icon(
-                                              Icons.camera_alt,
-                                              size: 40,
-                                              color: Colors.grey,
-                                            ),
-                                          )),
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              'Tap untuk pilih foto',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey[600],
-                              ),
-                            ),
-                          ],
+                      Center(
+                        child: Container(
+                          width: 40,
+                          height: 4,
+                          margin: const EdgeInsets.only(bottom: 12),
+                          decoration: BoxDecoration(
+                            color: Colors.grey[400],
+                            borderRadius: BorderRadius.circular(999),
+                          ),
                         ),
                       ),
-                      const SizedBox(height: 12),
+                      Center(
+                        child: Text(
+                          isEdit ? 'Edit Produk' : 'Tambah Produk',
+                          style: const TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+
+                      // ==== PILIH FOTO ====
+                      Center(
+                        child: GestureDetector(
+                          onTap: () async {
+                            final XFile? picked = await picker.pickImage(
+                              source: ImageSource.gallery,
+                            );
+                            if (picked != null) {
+                              setStateSheet(() {
+                                pickedImage = File(picked.path);
+                              });
+                            }
+                          },
+                          child: Column(
+                            children: [
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(12),
+                                child: SizedBox(
+                                  width: 120,
+                                  height: 120,
+                                  child: pickedImage != null
+                                      ? Image.file(
+                                          pickedImage!,
+                                          fit: BoxFit.cover,
+                                        )
+                                      : (product?.imageUrl != null
+                                          ? Image.network(
+                                              product!.imageUrl!,
+                                              fit: BoxFit.cover,
+                                            )
+                                          : Container(
+                                              color: Colors.grey[300],
+                                              child: const Icon(
+                                                Icons.camera_alt,
+                                                size: 40,
+                                                color: Colors.grey,
+                                              ),
+                                            )),
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Tap untuk pilih foto',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey[600],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 16),
 
                       TextFormField(
                         controller: nameController,
@@ -229,14 +267,13 @@ class _ProductsPageState extends State<ProductsPage> {
                         validator: (v) =>
                             v == null || v.isEmpty ? 'Nama wajib diisi' : null,
                       ),
-                      const SizedBox(height: 8),
 
-                      // DROPDOWN KATEGORI + TAMBAH KATEGORI BARU
+                      const SizedBox(height: 12),
+
                       DropdownButtonFormField<int>(
                         value: selectedCategoryId,
-                        decoration: const InputDecoration(
-                          labelText: 'Kategori',
-                        ),
+                        decoration:
+                            const InputDecoration(labelText: 'Kategori'),
                         items: [
                           ..._categories.map(
                             (c) => DropdownMenuItem<int>(
@@ -255,28 +292,59 @@ class _ProductsPageState extends State<ProductsPage> {
                             ),
                           ),
                         ],
-                        onChanged: (value) async {
-                          if (value == -1) {
-                            await _handleAddCategory(setStateDialog);
+                        onChanged: (val) async {
+                          if (val == -1) {
+                            await _handleAddCategory(setStateSheet);
                           } else {
-                            setStateDialog(() {
-                              selectedCategoryId = value;
+                            setStateSheet(() {
+                              selectedCategoryId = val;
                             });
                           }
                         },
                       ),
-                      const SizedBox(height: 8),
+
+                      const SizedBox(height: 12),
+
+                      TextFormField(
+                        controller: costPriceController,
+                        keyboardType: TextInputType.number,
+                        decoration: const InputDecoration(
+                          labelText: 'Harga Modal (contoh: 10000)',
+                        ),
+                        validator: (v) {
+                          if (v == null || v.isEmpty) {
+                            return 'Harga modal wajib diisi';
+                          }
+                          if (int.tryParse(v) == null) {
+                            return 'Masukkan angka saja';
+                          }
+                          return null;
+                        },
+                      ),
+
+                      const SizedBox(height: 12),
 
                       TextFormField(
                         controller: priceController,
                         keyboardType: TextInputType.number,
                         decoration: const InputDecoration(
-                          labelText: 'Harga (contoh: 12500)',
+                          labelText: 'Harga Jual (contoh: 12500)',
                         ),
-                        validator: (v) =>
-                            v == null || v.isEmpty ? 'Harga wajib diisi' : null,
+                        validator: (v) {
+                          if (v == null || v.isEmpty) {
+                            return 'Harga jual wajib diisi';
+                          }
+                          final p = int.tryParse(v);
+                          final c = int.tryParse(costPriceController.text);
+                          if (p == null) return 'Masukkan angka saja';
+                          if (c != null && p < c) {
+                            return 'Harga jual harus ≥ harga modal';
+                          }
+                          return null;
+                        },
                       ),
-                      const SizedBox(height: 8),
+
+                      const SizedBox(height: 12),
 
                       TextFormField(
                         controller: stockController,
@@ -284,73 +352,95 @@ class _ProductsPageState extends State<ProductsPage> {
                         decoration: const InputDecoration(
                           labelText: 'Stok',
                         ),
-                        validator: (v) =>
-                            v == null || v.isEmpty ? 'Stok wajib diisi' : null,
+                        validator: (v) {
+                          if (v == null || v.isEmpty) {
+                            return 'Stok wajib diisi';
+                          }
+                          if (int.tryParse(v) == null) {
+                            return 'Masukkan angka saja';
+                          }
+                          return null;
+                        },
                       ),
-                      const SizedBox(height: 8),
+
+                      const SizedBox(height: 12),
 
                       TextFormField(
-                        controller: descriptionController,
-                        maxLines: 2,
+                        controller: descController,
                         decoration: const InputDecoration(
                           labelText: 'Keterangan (opsional)',
                         ),
+                        maxLines: 2,
+                      ),
+
+                      const SizedBox(height: 20),
+
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context, false),
+                            child: const Text('Batal'),
+                          ),
+                          ElevatedButton(
+                            onPressed: () async {
+                              if (!formKey.currentState!.validate()) return;
+
+                              final name = nameController.text.trim();
+                              final costPrice =
+                                  int.parse(costPriceController.text.trim());
+                              final price =
+                                  int.parse(priceController.text.trim());
+                              final stock =
+                                  int.parse(stockController.text.trim());
+                              final desc = descController.text.trim();
+
+                              try {
+                                if (isEdit) {
+                                  await _productService.updateProduct(
+                                    id: product!.id,
+                                    name: name,
+                                    price: price,
+                                    costPrice: costPrice,
+                                    stock: stock,
+                                    categoryId: selectedCategoryId,
+                                    description:
+                                        desc.isEmpty ? null : desc,
+                                    imageFile: pickedImage,
+                                  );
+                                } else {
+                                  await _productService.createProduct(
+                                    name: name,
+                                    price: price,
+                                    costPrice: costPrice,
+                                    stock: stock,
+                                    categoryId: selectedCategoryId,
+                                    description:
+                                        desc.isEmpty ? null : desc,
+                                    imageFile: pickedImage,
+                                  );
+                                }
+
+                                if (context.mounted) {
+                                  Navigator.pop(context, true);
+                                }
+                              } catch (e) {
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                        content: Text('Error: $e')),
+                                  );
+                                }
+                              }
+                            },
+                            child: Text(isEdit ? 'Simpan' : 'Tambah'),
+                          ),
+                        ],
                       ),
                     ],
                   ),
                 ),
               ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop<bool>(context, false),
-                  child: const Text('Batal'),
-                ),
-                ElevatedButton(
-                  onPressed: () async {
-                    if (!formKey.currentState!.validate()) return;
-
-                    try {
-                      final name = nameController.text.trim();
-                      final price = double.parse(
-                        priceController.text.replaceAll('.', '').trim(),
-                      );
-                      final stock = int.parse(stockController.text.trim());
-
-                      if (isEdit) {
-                        await _productService.updateProduct(
-                          id: product!.id,
-                          name: name,
-                          stock: stock,
-                          price: price,
-                          categoryId: selectedCategoryId,
-                          description:
-                              descriptionController.text.trim().isEmpty
-                                  ? null
-                                  : descriptionController.text.trim(),
-                          imageFile: pickedImageFile,
-                        );
-                      } else {
-                        await _productService.createProduct(
-                          name: name,
-                          stock: stock,
-                          price: price,
-                          categoryId: selectedCategoryId,
-                          description:
-                              descriptionController.text.trim().isEmpty
-                                  ? null
-                                  : descriptionController.text.trim(),
-                          imageFile: pickedImageFile,
-                        );
-                      }
-
-                      if (mounted) Navigator.pop<bool>(context, true);
-                    } catch (e) {
-                      _showSnack('Error: $e');
-                    }
-                  },
-                  child: Text(isEdit ? 'Simpan' : 'Tambah'),
-                ),
-              ],
             );
           },
         );
@@ -361,6 +451,7 @@ class _ProductsPageState extends State<ProductsPage> {
       _loadInitialData();
     }
   }
+  /// ====== END FUNGSI BOTTOM SHEET ======
 
   Future<void> _confirmDelete(Product product) async {
     widget.onUserActivity();
@@ -452,21 +543,27 @@ class _ProductsPageState extends State<ProductsPage> {
                                 ),
                             ],
                           ),
-                          trailing: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              IconButton(
-                                icon: const Icon(Icons.edit),
-                                onPressed: () => _showProductForm(product: p),
-                              ),
-                              IconButton(
-                                icon: const Icon(
-                                  Icons.delete,
-                                  color: Colors.red,
+                          trailing: SizedBox(
+                            height: 72,
+                            child: Column(
+                              mainAxisAlignment:
+                                  MainAxisAlignment.spaceBetween,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                IconButton(
+                                  icon: const Icon(Icons.edit),
+                                  onPressed: () =>
+                                      _openProductForm(product: p),
                                 ),
-                                onPressed: () => _confirmDelete(p),
-                              ),
-                            ],
+                                IconButton(
+                                  icon: const Icon(
+                                    Icons.delete,
+                                    color: Colors.red,
+                                  ),
+                                  onPressed: () => _confirmDelete(p),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       );
@@ -474,7 +571,7 @@ class _ProductsPageState extends State<ProductsPage> {
                   ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => _showProductForm(),
+        onPressed: () => _openProductForm(),
         child: const Icon(Icons.add),
       ),
     );
