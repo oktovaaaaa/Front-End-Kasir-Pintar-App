@@ -28,16 +28,18 @@ class ReportService {
       final List data = jsonDecode(response.body) as List;
       return data.cast<Map<String, dynamic>>();
     } else {
-      throw Exception('Gagal memuat laporan keuntungan (${response.statusCode})');
+      throw Exception(
+          'Gagal memuat laporan keuntungan (${response.statusCode})');
     }
   }
 
-  /// Keuntungan per produk
-  Future<List<Map<String, dynamic>>> getProfitByProduct() async {
+  /// Keuntungan per produk PER PERIODE
+  /// GET /reports/profit-by-product?period=daily|weekly|monthly|yearly
+  Future<List<Map<String, dynamic>>> getProfitByProduct(String period) async {
     final token = await _getToken();
 
     final response = await http.get(
-      Uri.parse('$baseUrl/reports/profit-by-product'),
+      Uri.parse('$baseUrl/reports/profit-by-product?period=$period'),
       headers: {
         'Accept': 'application/json',
         if (token != null) 'Authorization': 'Bearer $token',
@@ -48,16 +50,18 @@ class ReportService {
       final List data = jsonDecode(response.body) as List;
       return data.cast<Map<String, dynamic>>();
     } else {
-      throw Exception('Gagal memuat keuntungan per produk (${response.statusCode})');
+      throw Exception(
+          'Gagal memuat keuntungan per produk (${response.statusCode})');
     }
   }
 
-  /// Keuntungan per kategori
-  Future<List<Map<String, dynamic>>> getProfitByCategory() async {
+  /// Keuntungan per kategori PER PERIODE
+  /// GET /reports/profit-by-category?period=daily|weekly|monthly|yearly
+  Future<List<Map<String, dynamic>>> getProfitByCategory(String period) async {
     final token = await _getToken();
 
     final response = await http.get(
-      Uri.parse('$baseUrl/reports/profit-by-category'),
+      Uri.parse('$baseUrl/reports/profit-by-category?period=$period'),
       headers: {
         'Accept': 'application/json',
         if (token != null) 'Authorization': 'Bearer $token',
@@ -68,7 +72,8 @@ class ReportService {
       final List data = jsonDecode(response.body) as List;
       return data.cast<Map<String, dynamic>>();
     } else {
-      throw Exception('Gagal memuat keuntungan per kategori (${response.statusCode})');
+      throw Exception(
+          'Gagal memuat keuntungan per kategori (${response.statusCode})');
     }
   }
 
@@ -88,7 +93,8 @@ class ReportService {
       final List data = jsonDecode(response.body) as List;
       return data.cast<Map<String, dynamic>>();
     } else {
-      throw Exception('Gagal memuat data kasbon (${response.statusCode})');
+      throw Exception(
+          'Gagal memuat data kasbon (${response.statusCode})');
     }
   }
 }

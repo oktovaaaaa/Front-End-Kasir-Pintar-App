@@ -45,9 +45,9 @@ class _CustomersPageState extends State<CustomersPage> {
   }
 
   void _showSnack(String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(msg),
-    ));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(msg)),
+    );
   }
 
   Future<void> _openForm({Customer? customer}) async {
@@ -69,6 +69,9 @@ class _CustomersPageState extends State<CustomersPage> {
       context: context,
       builder: (context) {
         return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(18),
+          ),
           title: Text(isEdit ? 'Edit Pelanggan' : 'Tambah Pelanggan'),
           content: SingleChildScrollView(
             child: Form(
@@ -84,14 +87,14 @@ class _CustomersPageState extends State<CustomersPage> {
                         v == null || v.isEmpty ? 'Nama wajib diisi' : null,
                   ),
                   TextFormField(
-                    controller: emailController,
-                    decoration:
-                        const InputDecoration(labelText: 'Email (opsional)'),
-                  ),
-                  TextFormField(
                     controller: phoneController,
                     decoration:
                         const InputDecoration(labelText: 'No. Telepon'),
+                  ),
+                  TextFormField(
+                    controller: emailController,
+                    decoration:
+                        const InputDecoration(labelText: 'Email (opsional)'),
                   ),
                   TextFormField(
                     controller: addressController,
@@ -187,6 +190,9 @@ class _CustomersPageState extends State<CustomersPage> {
       context: context,
       builder: (context) {
         return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(18),
+          ),
           title: const Text('Hapus Pelanggan'),
           content: Text('Yakin menghapus ${customer.name}?'),
           actions: [
@@ -216,12 +222,10 @@ class _CustomersPageState extends State<CustomersPage> {
   void _openHistory(Customer customer) async {
     widget.onUserActivity();
 
-    // sementara: panggil sales list dan filter di sisi client berdasarkan nama snapshot
-    // nanti bisa diganti pakai endpoint /customers/{id} kalau mau lebih detail
-
-    final sales = await _saleService.getSales(); // kita sudah punya ini
+    final sales = await _saleService.getSales();
     final customerSales = sales
-        .where((s) => (s.customerName ?? '').toLowerCase() ==
+        .where((s) =>
+            (s.customerName ?? '').toLowerCase() ==
             customer.name.toLowerCase())
         .toList();
 
@@ -232,49 +236,72 @@ class _CustomersPageState extends State<CustomersPage> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (context) {
-        return Padding(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 40,
-                height: 4,
-                margin: const EdgeInsets.only(bottom: 12),
-                decoration: BoxDecoration(
-                  color: Colors.grey[400],
-                  borderRadius: BorderRadius.circular(2),
-                ),
+        return DraggableScrollableSheet(
+          expand: false,
+          initialChildSize: 0.6,
+          minChildSize: 0.4,
+          maxChildSize: 0.9,
+          builder: (context, scrollController) {
+            return Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+              child: Column(
+                children: [
+                  Container(
+                    width: 40,
+                    height: 4,
+                    margin: const EdgeInsets.only(bottom: 12),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[400],
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  Text(
+                    'Riwayat ${customer.name}',
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Expanded(
+                    child: customerSales.isEmpty
+                        ? const Center(
+                            child: Text(
+                                'Belum ada transaksi untuk pelanggan ini'),
+                          )
+                        : ListView.builder(
+                            controller: scrollController,
+                            itemCount: customerSales.length,
+                            itemBuilder: (context, index) {
+                              final Sale sale = customerSales[index];
+                              String dateStr = '';
+                              try {
+                                dateStr = DateFormat(
+                                  'dd MMM yyyy • HH:mm',
+                                  'id_ID',
+                                ).format(sale.createdAt);
+                              } catch (_) {}
+
+                              return ListTile(
+                                contentPadding: EdgeInsets.zero,
+                                title: Text(
+                                  _priceFormatter.format(sale.totalAmount),
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                subtitle: Text(
+                                  '$dateStr\nStatus: ${sale.status == 'paid' ? 'Lunas' : 'Kasbon'}',
+                                ),
+                                isThreeLine: true,
+                              );
+                            },
+                          ),
+                  ),
+                ],
               ),
-              Text(
-                'Riwayat ${customer.name}',
-                style:
-                    const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 8),
-              Expanded(
-                child: customerSales.isEmpty
-                    ? const Center(
-                        child: Text('Belum ada transaksi untuk pelanggan ini'),
-                      )
-                    : ListView.builder(
-                        itemCount: customerSales.length,
-                        itemBuilder: (context, index) {
-                          final sale = customerSales[index];
-                          return ListTile(
-                            title: Text(
-                              _priceFormatter.format(sale.totalAmount),
-                              style:
-                                  const TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                            subtitle: Text(
-                                'Status: ${sale.status == 'paid' ? 'Lunas' : 'Kasbon'}'),
-                          );
-                        },
-                      ),
-              ),
-            ],
-          ),
+            );
+          },
         );
       },
     );
@@ -298,39 +325,121 @@ class _CustomersPageState extends State<CustomersPage> {
                 ],
               )
             : ListView.builder(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 80),
                 itemCount: _customers.length,
                 itemBuilder: (context, index) {
                   final c = _customers[index];
-                  return Card(
-                    margin: const EdgeInsets.only(bottom: 8),
-                    child: ListTile(
+
+                  final pastelColors = [
+                    const Color(0xFFFFF3E0), // soft orange
+                    const Color(0xFFE3F2FD), // soft blue
+                    const Color(0xFFFCE4EC), // soft pink
+                    const Color(0xFFE8F5E9), // soft green
+                    const Color(0xFFEDE7F6), // soft purple
+                  ];
+                  final bgColor =
+                      pastelColors[index % pastelColors.length];
+
+                  final initials = c.name.isNotEmpty
+                      ? c.name.trim()[0].toUpperCase()
+                      : '?';
+
+                  String subtitle = '';
+                  if (c.phone != null && c.phone!.isNotEmpty) {
+                    subtitle = c.phone!;
+                  } else if (c.email != null && c.email!.isNotEmpty) {
+                    subtitle = c.email!;
+                  }
+
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 10),
+                    decoration: BoxDecoration(
+                      color: bgColor,
+                      borderRadius: BorderRadius.circular(18),
+                    ),
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(18),
                       onTap: () => _openHistory(c),
-                      title: Text(c.name),
-                      subtitle: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          if (c.phone != null && c.phone!.isNotEmpty)
-                            Text(c.phone!),
-                          if (c.email != null && c.email!.isNotEmpty)
-                            Text(
-                              c.email!,
-                              style: const TextStyle(fontSize: 12),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 12,
+                        ),
+                        child: Row(
+                          children: [
+                            CircleAvatar(
+                              radius: 24,
+                              backgroundColor:
+                                  Colors.white.withOpacity(0.9),
+                              child: Text(
+                                initials,
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black87,
+                                ),
+                              ),
                             ),
-                        ],
-                      ),
-                      trailing: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          IconButton(
-                            icon: const Icon(Icons.edit),
-                            onPressed: () => _openForm(customer: c),
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.delete, color: Colors.red),
-                            onPressed: () => _confirmDelete(c),
-                          ),
-                        ],
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment:
+                                    CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    c.name,
+                                    style: const TextStyle(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  if (subtitle.isNotEmpty)
+                                    Text(
+                                      subtitle,
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.black54,
+                                      ),
+                                    ),
+                                  if (c.note != null &&
+                                      c.note!.trim().isNotEmpty)
+                                    Text(
+                                      c.note!,
+                                      style: const TextStyle(
+                                        fontSize: 11,
+                                        color: Colors.black45,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                IconButton(
+                                  icon: const Icon(
+                                    Icons.edit,
+                                    size: 20,
+                                  ),
+                                  onPressed: () => _openForm(customer: c),
+                                ),
+                                IconButton(
+                                  icon: const Icon(
+                                    Icons.delete,
+                                    size: 20,
+                                    color: Colors.red,
+                                  ),
+                                  onPressed: () =>
+                                      _confirmDelete(c),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   );
