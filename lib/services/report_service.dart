@@ -29,7 +29,8 @@ class ReportService {
       return data.cast<Map<String, dynamic>>();
     } else {
       throw Exception(
-          'Gagal memuat laporan keuntungan (${response.statusCode})');
+        'Gagal memuat laporan keuntungan (${response.statusCode})',
+      );
     }
   }
 
@@ -51,7 +52,8 @@ class ReportService {
       return data.cast<Map<String, dynamic>>();
     } else {
       throw Exception(
-          'Gagal memuat keuntungan per produk (${response.statusCode})');
+        'Gagal memuat keuntungan per produk (${response.statusCode})',
+      );
     }
   }
 
@@ -73,11 +75,13 @@ class ReportService {
       return data.cast<Map<String, dynamic>>();
     } else {
       throw Exception(
-          'Gagal memuat keuntungan per kategori (${response.statusCode})');
+        'Gagal memuat keuntungan per kategori (${response.statusCode})',
+      );
     }
   }
 
   /// Daftar kasbon (belum lunas)
+  /// GET /reports/kasbon
   Future<List<Map<String, dynamic>>> getKasbonList() async {
     final token = await _getToken();
 
@@ -94,7 +98,64 @@ class ReportService {
       return data.cast<Map<String, dynamic>>();
     } else {
       throw Exception(
-          'Gagal memuat data kasbon (${response.statusCode})');
+        'Gagal memuat data kasbon (${response.statusCode})',
+      );
+    }
+  }
+
+  /// TIMESERIES keuntungan 1 produk
+  /// GET /reports/product/{productId}/timeline?period=daily|weekly|monthly|yearly
+  Future<List<Map<String, dynamic>>> getProductTimeline(
+    int productId,
+    String period,
+  ) async {
+    final token = await _getToken();
+
+    final response = await http.get(
+      Uri.parse(
+        '$baseUrl/reports/product/$productId/timeline?period=$period',
+      ),
+      headers: {
+        'Accept': 'application/json',
+        if (token != null) 'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final List data = jsonDecode(response.body) as List;
+      return data.cast<Map<String, dynamic>>();
+    } else {
+      throw Exception(
+        'Gagal memuat timeline produk (${response.statusCode})',
+      );
+    }
+  }
+
+  /// TIMESERIES keuntungan 1 kategori
+  /// GET /reports/category/{categoryId}/timeline?period=daily|weekly|monthly|yearly
+  Future<List<Map<String, dynamic>>> getCategoryTimeline(
+    int categoryId,
+    String period,
+  ) async {
+    final token = await _getToken();
+
+    final response = await http.get(
+      Uri.parse(
+        '$baseUrl/reports/category/$categoryId/timeline?period=$period',
+      ),
+      headers: {
+        'Accept': 'application/json',
+        if (token != null) 'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final List data = jsonDecode(response.body) as List;
+      return data.cast<Map<String, dynamic>>();
+    } else {
+      throw Exception(
+        'Gagal memuat timeline kategori (${response.statusCode})',
+      );
     }
   }
 }

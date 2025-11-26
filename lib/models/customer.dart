@@ -17,6 +17,28 @@ class Customer {
     this.note,
   });
 
+  // ===== COPYWITH =====
+  Customer copyWith({
+    int? id,
+    String? name,
+    String? email,
+    String? phone,
+    String? address,
+    String? company,
+    String? note,
+  }) {
+    return Customer(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      email: email ?? this.email,
+      phone: phone ?? this.phone,
+      address: address ?? this.address,
+      company: company ?? this.company,
+      note: note ?? this.note,
+    );
+  }
+
+  // ===== FROM JSON =====
   factory Customer.fromJson(Map<String, dynamic> json) {
     return Customer(
       id: int.tryParse(json['id'].toString()) ?? 0,
@@ -27,5 +49,18 @@ class Customer {
       company: json['company']?.toString(),
       note: json['note']?.toString(),
     );
+  }
+
+  // ===== TO JSON =====
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'email': email,
+      'phone': phone,
+      'address': address,
+      'company': company,
+      'note': note,
+    };
   }
 }

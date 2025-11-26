@@ -6,7 +6,6 @@ import 'sales_history_page.dart';
 import 'reports_page.dart';
 import 'customers_page.dart';
 
-
 class HomePage extends StatefulWidget {
   final VoidCallback onUserActivity;
   final VoidCallback onForceLogout;
@@ -23,6 +22,8 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   int _bottomIndex = 2; // default buka Manajemen Produk
+
+  static const Color _primaryBlue = Color(0xFF57A0D3);
 
   void _handleUserActivity() {
     widget.onUserActivity();
@@ -56,9 +57,9 @@ class _HomePageState extends State<HomePage> {
         body: _buildBody(),
         bottomNavigationBar: Container(
           padding: const EdgeInsets.symmetric(vertical: 8),
-          decoration: BoxDecoration(
-            color: Colors.black.withOpacity(0.9),
-            borderRadius: const BorderRadius.only(
+          decoration: const BoxDecoration(
+            color: _primaryBlue,
+            borderRadius: BorderRadius.only(
               topLeft: Radius.circular(24),
               topRight: Radius.circular(24),
             ),
@@ -69,16 +70,26 @@ class _HomePageState extends State<HomePage> {
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 _bottomItem(
-                    icon: Icons.history, label: 'Riwayat', index: 0),
+                  icon: Icons.history,
+                  label: 'Riwayat',
+                  index: 0,
+                ),
                 _bottomItem(
-                    icon: Icons.shopping_cart, label: 'Transaksi', index: 1),
+                  icon: Icons.shopping_cart,
+                  label: 'Transaksi',
+                  index: 1,
+                ),
                 _centerProductItem(),
                 _bottomItem(
-                    icon: Icons.bar_chart,
-                    label: 'Keuangan',
-                    index: 3),
+                  icon: Icons.bar_chart,
+                  label: 'Keuangan',
+                  index: 3,
+                ),
                 _bottomItem(
-                    icon: Icons.people, label: 'Pelanggan', index: 4),
+                  icon: Icons.people,
+                  label: 'Pelanggan',
+                  index: 4,
+                ),
               ],
             ),
           ),
@@ -105,22 +116,21 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildBody() {
-  switch (_bottomIndex) {
-    case 0:
-      return SalesHistoryPage(onUserActivity: _handleUserActivity);
-    case 1:
-      return SalesPage(onUserActivity: _handleUserActivity);
-    case 2:
-      return ProductsPage(onUserActivity: _handleUserActivity);
-    case 3:
-      return ReportsPage(onUserActivity: _handleUserActivity);
-    case 4:
-      return CustomersPage(onUserActivity: _handleUserActivity);
-    default:
-      return _dashboardContent();
+    switch (_bottomIndex) {
+      case 0:
+        return SalesHistoryPage(onUserActivity: _handleUserActivity);
+      case 1:
+        return SalesPage(onUserActivity: _handleUserActivity);
+      case 2:
+        return ProductsPage(onUserActivity: _handleUserActivity);
+      case 3:
+        return ReportsPage(onUserActivity: _handleUserActivity);
+      case 4:
+        return CustomersPage(onUserActivity: _handleUserActivity);
+      default:
+        return _dashboardContent();
+    }
   }
-}
-
 
   Widget _dashboardContent() {
     return SingleChildScrollView(
@@ -154,16 +164,19 @@ class _HomePageState extends State<HomePage> {
                       showTitles: true,
                       getTitlesWidget: (value, meta) {
                         const months = ["Aug", "Sep", "Oct", "Nov", "Dec"];
-                        return Text(months[value.toInt() % 5]);
+                        return Text(
+                          months[value.toInt() % 5],
+                          style: const TextStyle(fontSize: 11),
+                        );
                       },
                     ),
                   ),
-                  leftTitles: const AxisTitles(
-                      sideTitles: SideTitles(showTitles: false)),
-                  topTitles: const AxisTitles(
-                      sideTitles: SideTitles(showTitles: false)),
-                  rightTitles: const AxisTitles(
-                      sideTitles: SideTitles(showTitles: false)),
+                  leftTitles:
+                      const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  topTitles:
+                      const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  rightTitles:
+                      const AxisTitles(sideTitles: SideTitles(showTitles: false)),
                 ),
                 barGroups: [
                   _bar(0, 12),
@@ -211,13 +224,17 @@ class _HomePageState extends State<HomePage> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, color: isActive ? Colors.white : Colors.grey),
+          Icon(
+            icon,
+            color: isActive ? Colors.white : Colors.white.withOpacity(0.7),
+          ),
           const SizedBox(height: 4),
           Text(
             label,
             style: TextStyle(
-              color: isActive ? Colors.white : Colors.grey,
+              color: isActive ? Colors.white : Colors.white.withOpacity(0.7),
               fontSize: 11,
+              fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
             ),
           ),
         ],
@@ -243,19 +260,19 @@ class _HomePageState extends State<HomePage> {
             height: 64,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: isActive ? Colors.blue : Colors.grey[700],
+              color: isActive ? Colors.white : Colors.white.withOpacity(0.9),
               boxShadow: [
                 BoxShadow(
                   blurRadius: 10,
                   spreadRadius: 1,
                   offset: const Offset(0, 4),
-                  color: Colors.blue.withOpacity(isActive ? 0.6 : 0.2),
+                  color: Colors.black.withOpacity(0.25),
                 )
               ],
             ),
-            child: const Icon(
+            child: Icon(
               Icons.inventory_2_rounded,
-              color: Colors.white,
+              color: _primaryBlue,
               size: 30,
             ),
           ),
@@ -304,7 +321,7 @@ class _HomePageState extends State<HomePage> {
 
   Widget _settingItem(IconData icon, String title, {VoidCallback? onTap}) {
     return ListTile(
-      leading: Icon(icon, color: Colors.blue),
+      leading: Icon(icon, color: _primaryBlue),
       title: Text(title, style: const TextStyle(fontSize: 16)),
       onTap: () {
         _handleUserActivity();

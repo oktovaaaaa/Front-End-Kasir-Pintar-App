@@ -1,152 +1,124 @@
 import 'package:flutter/material.dart';
-import 'login_page.dart';
 
-class OnboardingPage extends StatelessWidget {
-  /// Dipanggil ketika user menekan tombol "Mulai"
+class OnboardingPage extends StatefulWidget {
+  /// Dipanggil otomatis setelah animasi selesai (untuk pindah ke LoginPage)
   final VoidCallback onContinue;
 
   const OnboardingPage({super.key, required this.onContinue});
 
   @override
+  State<OnboardingPage> createState() => _OnboardingPageState();
+}
+
+class _OnboardingPageState extends State<OnboardingPage>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _animation;
+
+  @override
+  void initState() {
+    super.initState();
+
+    // ⏱️ DURASI ANIMASI LINGKARAN PUTIH
+    // UBAH DI SINI KALAU MAU CEPAT / LAMBAT (sekarang 4 detik = 4000 ms)
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1000),
+    );
+
+    _animation = CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeOutCubic,
+    );
+
+    // ⏸ JEDA 2 DETIK: background biru DIAM dulu
+    Future.delayed(const Duration(seconds: 2), () async {
+      await _controller.forward();
+      if (mounted) {
+        widget.onContinue(); // setelah animasi selesai -> ke LoginPage
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final media = MediaQuery.of(context);
-    final size = media.size;
+    final size = MediaQuery.of(context).size;
+    final maxRadius = size.longestSide * 1.2;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FB),
-      body: SafeArea(
-        child: Column(
-          children: [
-            // Bagian atas: logo + teks
-            Expanded(
-              flex: 3,
-              child: Container(
-                width: double.infinity,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Container(
-                      width: 80,
-                      height: 80,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Colors.white,
-                        boxShadow: [
-                          BoxShadow(
-                            blurRadius: 20,
-                            color: Colors.black.withOpacity(0.08),
-                            offset: const Offset(0, 8),
-                          ),
-                        ],
-                      ),
-                      child: const Icon(
-                        Icons.point_of_sale_rounded,
-                        size: 40,
-                        color: Color(0xFF1F2C46),
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    const Text(
-                      'Kasir Pintar Resto',
-                      style: TextStyle(
-                        fontSize: 26,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF1F2C46),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Aplikasi kasir khusus restoran.\nKasir login setelah akun disetujui admin.',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey.shade600,
-                        height: 1.5,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
+      // warna di belakang semuanya (akan terlihat ketika lingkaran putih sudah penuh)
+      backgroundColor: Colors.white,
+      body: AnimatedBuilder(
+        animation: _animation,
+        builder: (_, __) {
+          // 🎯 LINGKARAN PUTIH DARI DALAM ➜ MEMBESAR KE LUAR
+          final radius = _animation.value * maxRadius;
+          final center = Offset(size.width / 2, size.height / 2);
 
-            // Bagian bawah: card + tombol "Mulai"
-            Expanded(
-              flex: 2,
-              child: Container(
-                width: double.infinity,
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
-                  boxShadow: [
-                    BoxShadow(
-                      blurRadius: 20,
-                      color: Color(0x22000000),
-                      offset: Offset(0, -4),
-                    ),
-                  ],
-                ),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Welcome to Kasir Resto',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF1F2C46),
+          return Stack(
+            fit: StackFit.expand,
+            children: [
+              // LAYER 1: background biru + logo (diam)
+              Container(
+                color: const Color(0xFF57A0D3),
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Image.asset(
+                        "assets/kasir.png",
+                        width: 120,
+                        height: 120,
                       ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Kelola transaksi kasir dengan mudah.\nAdmin mengontrol dan menyetujui semua kasir.',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey.shade600,
-                      ),
-                    ),
-                    const Spacer(),
-                    SizedBox(
-                      width: double.infinity,
-                      height: 52,
-                      child: ElevatedButton(
-                        onPressed: onContinue, // <- panggil callback dari main.dart
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF1F2C46),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(24),
-                          ),
-                        ),
-                        child: const Text(
-                          'Mulai',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Center(
-                      child: Text(
-                        'Dikelola oleh admin restoran',
+                      const SizedBox(height: 16),
+                      const Text(
+                        "Kasir Pintar",
                         style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey.shade500,
+                          color: Colors.white,
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
-                    ),
-                    SizedBox(height: media.padding.bottom),
-                  ],
+                    ],
+                  ),
                 ),
               ),
-            ),
-          ],
-        ),
+
+              // LAYER 2: lingkaran putih yang MEMBESAR dari tengah
+              CustomPaint(
+                painter: _WhiteCirclePainter(center: center, radius: radius),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
+}
+
+/// Painter untuk lingkaran putih membesar
+class _WhiteCirclePainter extends CustomPainter {
+  final Offset center;
+  final double radius;
+
+  _WhiteCirclePainter({required this.center, required this.radius});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = Colors.white
+      ..style = PaintingStyle.fill;
+
+    canvas.drawCircle(center, radius, paint);
+  }
+
+  @override
+  bool shouldRepaint(_WhiteCirclePainter oldDelegate) =>
+      oldDelegate.radius != radius;
 }

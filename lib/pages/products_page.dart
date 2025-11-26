@@ -745,7 +745,7 @@ class _ProductsPageState extends State<ProductsPage> {
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 80),
       children: [
         const SizedBox(height: 4),
-        _buildHeader(),
+        // _buildHeader(),
         const SizedBox(height: 16),
         _buildSearchAndFilter(),
         const SizedBox(height: 16),
@@ -768,44 +768,44 @@ class _ProductsPageState extends State<ProductsPage> {
     );
   }
 
-  Widget _buildHeader() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        const Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Produk & Stok',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            SizedBox(height: 4),
-            Text(
-              'Kelola produk yang dijual di toko',
-              style: TextStyle(
-                fontSize: 12,
-                color: Colors.grey,
-              ),
-            ),
-          ],
-        ),
-        Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: _primaryBlue.withOpacity(0.1),
-            shape: BoxShape.circle,
-          ),
-          child: Icon(
-            Icons.inventory_2_outlined,
-            color: _primaryBlue,
-          ),
-        )
-      ],
-    );
-  }
+  // Widget _buildHeader() {
+  //   return Row(
+  //     mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  //     children: [
+  //       const Column(
+  //         crossAxisAlignment: CrossAxisAlignment.start,
+  //         children: [
+  //           Text(
+  //             'Produk & Stok',
+  //             style: TextStyle(
+  //               fontSize: 20,
+  //               fontWeight: FontWeight.bold,
+  //             ),
+  //           ),
+  //           SizedBox(height: 4),
+  //           Text(
+  //             'Kelola produk yang dijual di toko',
+  //             style: TextStyle(
+  //               fontSize: 12,
+  //               color: Colors.grey,
+  //             ),
+  //           ),
+  //         ],
+  //       ),
+  //       Container(
+  //         padding: const EdgeInsets.all(8),
+  //         decoration: BoxDecoration(
+  //           color: _primaryBlue.withOpacity(0.1),
+  //           shape: BoxShape.circle,
+  //         ),
+  //         child: Icon(
+  //           Icons.inventory_2_outlined,
+  //           color: _primaryBlue,
+  //         ),
+  //       )
+  //     ],
+  //   );
+  // }
 
   Widget _buildSearchAndFilter() {
     return Column(
