@@ -104,33 +104,31 @@ class SaleService {
 
   /// Melunasi / mencicil kasbon
   /// POST /sales/{id}/pay-kasbon  body: { "amount": 50000 }
-  Future<Map<String, dynamic>> payKasbon({
-    required int saleId,
-    required double amount,
-  }) async {
-    final token = await _getToken();
+ Future<Map<String, dynamic>> payKasbon({
+  required int saleId,
+  required double amount,
+}) async {
+  final token = await _getToken();
 
-    final response = await http.post(
-      Uri.parse('$baseUrl/sales/$saleId/pay-kasbon'),
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-        if (token != null) 'Authorization': 'Bearer $token',
-      },
-      body: jsonEncode({
-        'amount': amount,
-      }),
+  final response = await http.post(
+    Uri.parse('$baseUrl/sales/$saleId/pay-kasbon'),
+    headers: {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json',
+      if (token != null) 'Authorization': 'Bearer $token',
+    },
+    body: jsonEncode({'amount': amount}),
+  );
+
+  final data = jsonDecode(response.body);
+
+  if (response.statusCode == 200) {
+    return data as Map<String, dynamic>;
+  } else {
+    throw Exception(
+      data['message'] ?? 'Gagal menyimpan pembayaran kasbon',
     );
-
-    final data = jsonDecode(response.body);
-
-    if (response.statusCode == 200) {
-      // response berisi: message, sale, remaining
-      return data as Map<String, dynamic>;
-    } else {
-      throw Exception(
-        data['message'] ?? 'Gagal menyimpan pembayaran kasbon',
-      );
-    }
   }
+}
+
 }
