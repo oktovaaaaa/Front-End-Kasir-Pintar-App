@@ -39,9 +39,8 @@ class _ReportsPageState extends State<ReportsPage>
   List<Map<String, dynamic>> _profitCategories = [];
   List<Map<String, dynamic>> _kasbon = [];
 
-  // search
-  String _productSearch = '';
-  String _categorySearch = '';
+  // === GLOBAL SEARCH UNTUK PRODUK & KATEGORI ===
+  String _globalSearch = '';
 
   @override
   void initState() {
@@ -165,28 +164,29 @@ class _ReportsPageState extends State<ReportsPage>
   Widget _buildMainSegmentedTab() {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
-      padding: const EdgeInsets.all(4),
+      padding: const EdgeInsets.all(3),
       decoration: BoxDecoration(
         color: const Color(0xFFE8F2FF),
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(20),
       ),
       child: TabBar(
         indicator: BoxDecoration(
-          color: _primaryBlue,
-          borderRadius: BorderRadius.circular(20),
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
         ),
         indicatorSize: TabBarIndicatorSize.tab,
-        labelColor: Colors.white,
+        labelColor: _primaryBlue,
         unselectedLabelColor: _primaryBlue.withOpacity(0.7),
         labelStyle: const TextStyle(
-          fontSize: 13,
+          fontSize: 12,
           fontWeight: FontWeight.w700,
         ),
         unselectedLabelStyle: const TextStyle(
-          fontSize: 13,
+          fontSize: 12,
           fontWeight: FontWeight.w500,
         ),
-        overlayColor: WidgetStateProperty.all(Colors.transparent),
+        overlayColor: MaterialStateProperty.all(Colors.transparent),
+        dividerColor: Colors.transparent,
         tabs: const [
           Tab(text: 'Laporan'),
           Tab(text: 'Kasbon'),
@@ -205,26 +205,22 @@ class _ReportsPageState extends State<ReportsPage>
     final totalProfit = _summary.fold<double>(
       0,
       (prev, row) =>
-          prev +
-          (double.tryParse(row['total_profit'].toString()) ?? 0.0),
+          prev + (double.tryParse(row['total_profit'].toString()) ?? 0.0),
     );
     final totalSales = _summary.fold<double>(
       0,
       (prev, row) =>
-          prev +
-          (double.tryParse(row['total_sales'].toString()) ?? 0.0),
+          prev + (double.tryParse(row['total_sales'].toString()) ?? 0.0),
     );
     final totalTrx = _summary.fold<int>(
       0,
       (prev, row) =>
-          prev +
-          (int.tryParse(row['transaksi'].toString()) ?? 0),
+          prev + (int.tryParse(row['transaksi'].toString()) ?? 0),
     );
     final totalQty = _profitProducts.fold<int>(
       0,
       (prev, row) =>
-          prev +
-          (int.tryParse(row['total_qty'].toString()) ?? 0),
+          prev + (int.tryParse(row['total_qty'].toString()) ?? 0),
     );
 
     return RefreshIndicator(
@@ -245,6 +241,11 @@ class _ReportsPageState extends State<ReportsPage>
           const SizedBox(height: 8),
           _buildProfitChart(),
           const SizedBox(height: 16),
+
+          // === GLOBAL SEARCH FIELD (untuk Produk & Kategori) ===
+          _buildGlobalSearchField(),
+          const SizedBox(height: 12),
+
           _buildProductProfitSection(),
           const SizedBox(height: 16),
           _buildCategoryProfitSection(),
@@ -359,8 +360,7 @@ class _ReportsPageState extends State<ReportsPage>
             style: TextStyle(
               fontSize: 12,
               fontWeight: active ? FontWeight.w700 : FontWeight.w500,
-              color:
-                  active ? _primaryBlue : _primaryBlue.withOpacity(0.7),
+              color: active ? _primaryBlue : _primaryBlue.withOpacity(0.7),
             ),
           ),
         ),
@@ -623,8 +623,7 @@ class _ReportsPageState extends State<ReportsPage>
                               isCurved: !onlyOnePoint,
                               barWidth: 3,
                               isStrokeCapRound: true,
-                              dotData:
-                                  FlDotData(show: onlyOnePoint),
+                              dotData: FlDotData(show: onlyOnePoint),
                               belowBarData: BarAreaData(
                                 show: true,
                                 gradient: LinearGradient(
@@ -651,8 +650,7 @@ class _ReportsPageState extends State<ReportsPage>
                               isCurved: !onlyOnePoint,
                               barWidth: 2,
                               isStrokeCapRound: true,
-                              dotData:
-                                  FlDotData(show: onlyOnePoint),
+                              dotData: FlDotData(show: onlyOnePoint),
                               belowBarData: BarAreaData(show: false),
                               color: Colors.green,
                             ),
@@ -754,26 +752,22 @@ class _ReportsPageState extends State<ReportsPage>
     final totalProfit = _summary.fold<double>(
       0,
       (prev, row) =>
-          prev +
-          (double.tryParse(row['total_profit'].toString()) ?? 0.0),
+          prev + (double.tryParse(row['total_profit'].toString()) ?? 0.0),
     );
     final totalSales = _summary.fold<double>(
       0,
       (prev, row) =>
-          prev +
-          (double.tryParse(row['total_sales'].toString()) ?? 0.0),
+          prev + (double.tryParse(row['total_sales'].toString()) ?? 0.0),
     );
     final totalTrx = _summary.fold<int>(
       0,
       (prev, row) =>
-          prev +
-          (int.tryParse(row['transaksi'].toString()) ?? 0),
+          prev + (int.tryParse(row['transaksi'].toString()) ?? 0),
     );
     final totalQty = _profitProducts.fold<int>(
       0,
       (prev, row) =>
-          prev +
-          (int.tryParse(row['total_qty'].toString()) ?? 0),
+          prev + (int.tryParse(row['total_qty'].toString()) ?? 0),
     );
 
     String title = '';
@@ -993,19 +987,8 @@ class _ReportsPageState extends State<ReportsPage>
     );
   }
 
-  // ==== TOP PRODUK (dengan detail timeline) ====
-
-  Widget _buildProductProfitSection() {
-    if (_loadingProd && _profitProducts.isEmpty) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    final filtered = _profitProducts.where((row) {
-      final name = row['product_name']?.toString().toLowerCase() ?? '';
-      if (_productSearch.isEmpty) return true;
-      return name.contains(_productSearch.toLowerCase());
-    }).toList();
-
+  // === GLOBAL SEARCH FIELD ===
+  Widget _buildGlobalSearchField() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1021,7 +1004,7 @@ class _ReportsPageState extends State<ReportsPage>
         const SizedBox(height: 8),
         TextField(
           decoration: InputDecoration(
-            hintText: 'Cari produk...',
+            hintText: 'Cari produk atau kategori...',
             prefixIcon: const Icon(Icons.search, size: 18),
             isDense: true,
             border: OutlineInputBorder(
@@ -1030,10 +1013,32 @@ class _ReportsPageState extends State<ReportsPage>
           ),
           onChanged: (v) {
             setState(() {
-              _productSearch = v;
+              _globalSearch = v;
             });
           },
         ),
+      ],
+    );
+  }
+
+  // ==== TOP PRODUK (dengan detail timeline) ====
+
+  Widget _buildProductProfitSection() {
+    if (_loadingProd && _profitProducts.isEmpty) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    final filtered = _profitProducts.where((row) {
+      final name = row['product_name']?.toString().toLowerCase() ?? '';
+      if (_globalSearch.isEmpty) return true;
+      return name.contains(_globalSearch.toLowerCase());
+    }).toList();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (!_globalSearch.isEmpty)
+          const SizedBox.shrink(), // judul Top Produk sudah di bagian search
         const SizedBox(height: 8),
         if (filtered.isEmpty)
           const Text(
@@ -1610,18 +1615,17 @@ class _ReportsPageState extends State<ReportsPage>
               barWidth: 3,
               isStrokeCapRound: true,
               dotData: FlDotData(show: onlyOnePoint),
-belowBarData: BarAreaData(
-  show: true,
-  gradient: LinearGradient(
-    begin: Alignment.topCenter,
-    end: Alignment.bottomCenter,
-    colors: [
-      _primaryBlue.withOpacity(0.35),
-      _primaryBlue.withOpacity(0.0),
-    ],
-  ),
-),
-
+              belowBarData: BarAreaData(
+                show: true,
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    _primaryBlue.withOpacity(0.35),
+                    _primaryBlue.withOpacity(0.0),
+                  ],
+                ),
+              ),
               color: _primaryBlue,
             ),
           ],
@@ -1630,7 +1634,7 @@ belowBarData: BarAreaData(
     );
   }
 
-  // ==== TOP KATEGORI ==== 
+  // ==== TOP KATEGORI ====
 
   Widget _buildCategoryProfitSection() {
     if (_loadingCat && _profitCategories.isEmpty) {
@@ -1640,8 +1644,8 @@ belowBarData: BarAreaData(
     final filtered = _profitCategories.where((row) {
       final name =
           row['category_name']?.toString().toLowerCase() ?? '';
-      if (_categorySearch.isEmpty) return true;
-      return name.contains(_categorySearch.toLowerCase());
+      if (_globalSearch.isEmpty) return true;
+      return name.contains(_globalSearch.toLowerCase());
     }).toList();
 
     return Column(
@@ -1655,22 +1659,6 @@ belowBarData: BarAreaData(
         const Text(
           'Kategori dengan kontribusi keuntungan terbesar.',
           style: TextStyle(fontSize: 11, color: Colors.grey),
-        ),
-        const SizedBox(height: 8),
-        TextField(
-          decoration: InputDecoration(
-            hintText: 'Cari kategori...',
-            prefixIcon: const Icon(Icons.search, size: 18),
-            isDense: true,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-          ),
-          onChanged: (v) {
-            setState(() {
-              _categorySearch = v;
-            });
-          },
         ),
         const SizedBox(height: 8),
         if (filtered.isEmpty)
@@ -2169,12 +2157,10 @@ belowBarData: BarAreaData(
       }
 
       try {
-        // TODO: sesuaikan dengan endpoint backend-mu
-        // Misalnya: POST /api/sales/{id}/pay-kasbon
-await _saleService.payKasbon(
-  saleId: saleId,
-  amount: bayar,
-);
+        await _saleService.payKasbon(
+          saleId: saleId,
+          amount: bayar,
+        );
 
         _showSnack('Kasbon berhasil diperbarui');
         _loadKasbon();

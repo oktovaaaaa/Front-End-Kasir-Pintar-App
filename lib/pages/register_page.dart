@@ -25,9 +25,15 @@ class _RegisterPageState extends State<RegisterPage> {
   bool _isLoading = false;
   String? _message;
 
+  bool _obscurePassword = true;
+  bool _obscureConfirmPassword = true;
+
   // ==== FOTO PROFIL (OPSIONAL) ====
   final ImagePicker _picker = ImagePicker();
   XFile? _pickedImage; // kalau null, tampilkan icon user
+
+  static const Color _primaryBlue = Color(0xFF57A0D3);
+  static const Color _darkBlue = Color(0xFF1F2C46);
 
   @override
   void dispose() {
@@ -38,6 +44,36 @@ class _RegisterPageState extends State<RegisterPage> {
     _passwordController.dispose();
     _passwordConfirmController.dispose();
     super.dispose();
+  }
+
+  InputDecoration _inputDecoration({
+    required String label,
+    required IconData icon,
+  }) {
+    return InputDecoration(
+      labelText: label,
+      prefixIcon: Icon(icon),
+      prefixIconColor: _primaryBlue,
+      filled: true,
+      fillColor: const Color(0xFFF5F8FE),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(18),
+        borderSide: BorderSide.none,
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(18),
+        borderSide: BorderSide.none,
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(18),
+        borderSide: const BorderSide(color: _primaryBlue, width: 1.4),
+      ),
+      labelStyle: TextStyle(
+        color: Colors.grey.shade600,
+        fontSize: 13,
+      ),
+    );
   }
 
   Future<void> _pickImage(ImageSource source) async {
@@ -112,7 +148,6 @@ class _RegisterPageState extends State<RegisterPage> {
       birthDate: _birthDateController.text.trim(),
       password: _passwordController.text,
       passwordConfirmation: _passwordConfirmController.text,
-      // kalau nanti API-nya sudah siap, bisa kirim path / file:
       // profileImagePath: _pickedImage?.path,
     );
 
@@ -122,8 +157,8 @@ class _RegisterPageState extends State<RegisterPage> {
     String message;
 
     if (statusCode == 201) {
-      message =
-          body['message'] ?? 'Registrasi berhasil. Menunggu persetujuan admin.';
+      message = body['message'] ??
+          'Registrasi berhasil. Menunggu persetujuan admin.';
       setState(() {
         _isLoading = false;
         _message = message;
@@ -157,228 +192,386 @@ class _RegisterPageState extends State<RegisterPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FB),
-      appBar: AppBar(
-        title: const Text('Registrasi Kasir'),
-        backgroundColor: const Color(0xFFF5F7FB),
-        elevation: 0,
-        foregroundColor: const Color(0xFF1F2C46),
-      ),
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Register Now',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF1F2C46),
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Daftarkan diri Anda sebagai kasir. Admin akan meninjau dan menyetujui akun Anda.',
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: Colors.grey.shade600,
-                  ),
-                ),
-                const SizedBox(height: 20),
-
-                // ===== AVATAR SEPERTI DESAIN, OPSIONAL =====
-                Center(
-                  child: Stack(
+      // sama seperti login: background gradient biru
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              Color(0xFFe8f4fb),
+              Color(0xFFc3ddf3),
+            ],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
+        child: SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Bar atas: back + judul
+                  Row(
                     children: [
-                      CircleAvatar(
-                        radius: 48,
-                        backgroundColor: const Color(0xFFE0E6FF),
-                        backgroundImage: _pickedImage != null
-                            ? FileImage(File(_pickedImage!.path))
-                            : null,
-                        child: _pickedImage == null
-                            ? const Icon(
-                                Icons.person_outline,
-                                size: 48,
-                                color: Color(0xFF9FA8DA),
-                              )
-                            : null,
+                      IconButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        icon: const Icon(Icons.arrow_back_rounded),
+                        color: _darkBlue,
                       ),
-                      Positioned(
-                        bottom: 0,
-                        right: 0,
-                        child: InkWell(
-                          onTap: _showPickImageSheet,
-                          child: CircleAvatar(
-                            radius: 16,
-                            backgroundColor: const Color(0xFF5C6BC0),
-                            child: const Icon(
-                              Icons.edit,
-                              size: 16,
-                              color: Colors.white,
-                            ),
-                          ),
+                      const SizedBox(width: 4),
+                      const Text(
+                        'Registrasi Kasir',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                          color: _darkBlue,
                         ),
                       ),
                     ],
                   ),
-                ),
-                const SizedBox(height: 24),
+                  const SizedBox(height: 8),
 
-                if (_message != null)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
+                  // Deskripsi singkat
+                  Align(
+                    alignment: Alignment.centerLeft,
                     child: Text(
-                      _message!,
+                      'Daftarkan diri Anda sebagai kasir. Admin akan meninjau dan menyetujui akun Anda.',
                       style: TextStyle(
-                        color: _message!.toLowerCase().contains('berhasil')
-                            ? Colors.green
-                            : Colors.red,
+                        fontSize: 12,
+                        color: Colors.grey.shade700,
                       ),
                     ),
                   ),
+                  const SizedBox(height: 20),
 
-                Container(
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(24),
-                    boxShadow: [
-                      BoxShadow(
-                        blurRadius: 20,
-                        color: Colors.black.withOpacity(0.06),
-                        offset: const Offset(0, 10),
-                      ),
-                    ],
-                  ),
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
+                  // AVATAR cakep dengan border
+                  Center(
+                    child: Stack(
                       children: [
-                        TextFormField(
-                          controller: _nameController,
-                          decoration: InputDecoration(
-                            labelText: 'Nama Lengkap',
-                            prefixIcon: const Icon(Icons.person_outline),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(16),
+                        Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            gradient: const LinearGradient(
+                              colors: [
+                                Color(0xFF57A0D3),
+                                Color(0xFF3C82B2),
+                              ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
                             ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.12),
+                                blurRadius: 18,
+                                offset: const Offset(0, 10),
+                              ),
+                            ],
                           ),
-                          validator: (v) =>
-                              v == null || v.isEmpty ? 'Nama wajib diisi' : null,
-                        ),
-                        const SizedBox(height: 12),
-                        TextFormField(
-                          controller: _emailController,
-                          keyboardType: TextInputType.emailAddress,
-                          decoration: InputDecoration(
-                            labelText: 'Email',
-                            prefixIcon: const Icon(Icons.email_outlined),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
+                          child: CircleAvatar(
+                            radius: 46,
+                            backgroundColor: const Color(0xFFE7F0FF),
+                            backgroundImage: _pickedImage != null
+                                ? FileImage(File(_pickedImage!.path))
+                                : null,
+                            child: _pickedImage == null
+                                ? const Icon(
+                                    Icons.person_outline,
+                                    size: 48,
+                                    color: Color(0xFF90A4CE),
+                                  )
+                                : null,
                           ),
-                          validator: (v) =>
-                              v == null || v.isEmpty ? 'Email wajib diisi' : null,
                         ),
-                        const SizedBox(height: 12),
-                        TextFormField(
-                          controller: _phoneController,
-                          keyboardType: TextInputType.phone,
-                          decoration: InputDecoration(
-                            labelText: 'No. Telepon',
-                            prefixIcon: const Icon(Icons.phone_iphone),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                          ),
-                          validator: (v) => v == null || v.isEmpty
-                              ? 'No. telepon wajib diisi'
-                              : null,
-                        ),
-                        const SizedBox(height: 12),
-                        TextFormField(
-                          controller: _birthDateController,
-                          decoration: InputDecoration(
-                            labelText: 'Tanggal Lahir (YYYY-MM-DD)',
-                            prefixIcon: const Icon(Icons.cake_outlined),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                          ),
-                          validator: (v) {
-                            if (v == null || v.isEmpty) {
-                              return 'Tanggal lahir wajib diisi';
-                            }
-                            final regex = RegExp(r'^\d{4}-\d{2}-\d{2}$');
-                            if (!regex.hasMatch(v)) {
-                              return 'Format harus YYYY-MM-DD, contoh 2000-10-01';
-                            }
-                            return null;
-                          },
-                        ),
-                        const SizedBox(height: 12),
-                        TextFormField(
-                          controller: _passwordController,
-                          obscureText: true,
-                          decoration: InputDecoration(
-                            labelText: 'Password',
-                            prefixIcon: const Icon(Icons.lock_outline),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                          ),
-                          validator: (v) => v == null || v.length < 6
-                              ? 'Password minimal 6 karakter'
-                              : null,
-                        ),
-                        const SizedBox(height: 12),
-                        TextFormField(
-                          controller: _passwordConfirmController,
-                          obscureText: true,
-                          decoration: InputDecoration(
-                            labelText: 'Konfirmasi Password',
-                            prefixIcon: const Icon(Icons.lock_outline),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                          ),
-                          validator: (v) =>
-                              v != _passwordController.text
-                                  ? 'Konfirmasi password tidak sama'
-                                  : null,
-                        ),
-                        const SizedBox(height: 20),
-                        SizedBox(
-                          width: double.infinity,
-                          height: 50,
-                          child: _isLoading
-                              ? const Center(child: CircularProgressIndicator())
-                              : ElevatedButton(
-                                  onPressed: _register,
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: const Color(0xFF1F2C46),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(20),
-                                    ),
-                                  ),
-                                  child: const Text(
-                                    'Daftar',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w600,
-                                    ),
+                        Positioned(
+                          bottom: 4,
+                          right: 4,
+                          child: InkWell(
+                            onTap: _showPickImageSheet,
+                            child: CircleAvatar(
+                              radius: 16,
+                              backgroundColor: Colors.white,
+                              child: Container(
+                                decoration: const BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      Color(0xFF57A0D3),
+                                      Color(0xFF3C82B2),
+                                    ],
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
                                   ),
                                 ),
+                                child: const Icon(
+                                  Icons.camera_alt_rounded,
+                                  size: 16,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ),
                         ),
                       ],
                     ),
                   ),
-                ),
-              ],
+                  const SizedBox(height: 18),
+
+                  if (_message != null)
+                    Container(
+                      margin: const EdgeInsets.only(bottom: 14),
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 10,
+                      ),
+                      decoration: BoxDecoration(
+                        color: _message!.toLowerCase().contains('berhasil')
+                            ? const Color(0xFFE8F8EF)
+                            : const Color(0xFFFFE8E8),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: _message!.toLowerCase().contains('berhasil')
+                              ? const Color(0xFF46A36A)
+                              : const Color(0xFFD64545),
+                        ),
+                      ),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Icon(
+                            _message!.toLowerCase().contains('berhasil')
+                                ? Icons.check_circle_rounded
+                                : Icons.error_rounded,
+                            size: 18,
+                            color:
+                                _message!.toLowerCase().contains('berhasil')
+                                    ? const Color(0xFF46A36A)
+                                    : const Color(0xFFD64545),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              _message!,
+                              style: TextStyle(
+                                fontSize: 12,
+                                color:
+                                    _message!.toLowerCase().contains('berhasil')
+                                        ? const Color(0xFF2F7A4E)
+                                        : const Color(0xFFB93636),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                  // CARD FORM
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.fromLTRB(20, 18, 20, 20),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(26),
+                      boxShadow: [
+                        BoxShadow(
+                          blurRadius: 22,
+                          spreadRadius: 2,
+                          color: Colors.black.withOpacity(0.08),
+                          offset: const Offset(0, 14),
+                        ),
+                      ],
+                      border: Border.all(
+                        color: Colors.white.withOpacity(0.7),
+                      ),
+                    ),
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        children: [
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              'Data diri kasir',
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600,
+                                color: _darkBlue,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+
+                          // Nama
+                          TextFormField(
+                            controller: _nameController,
+                            decoration: _inputDecoration(
+                              label: 'Nama lengkap',
+                              icon: Icons.person_outline,
+                            ),
+                            validator: (v) =>
+                                v == null || v.isEmpty ? 'Nama wajib diisi' : null,
+                          ),
+                          const SizedBox(height: 12),
+
+                          // Email
+                          TextFormField(
+                            controller: _emailController,
+                            keyboardType: TextInputType.emailAddress,
+                            decoration: _inputDecoration(
+                              label: 'Email',
+                              icon: Icons.email_outlined,
+                            ),
+                            validator: (v) =>
+                                v == null || v.isEmpty ? 'Email wajib diisi' : null,
+                          ),
+                          const SizedBox(height: 12),
+
+                          // Phone
+                          TextFormField(
+                            controller: _phoneController,
+                            keyboardType: TextInputType.phone,
+                            decoration: _inputDecoration(
+                              label: 'No. telepon',
+                              icon: Icons.phone_iphone,
+                            ),
+                            validator: (v) => v == null || v.isEmpty
+                                ? 'No. telepon wajib diisi'
+                                : null,
+                          ),
+                          const SizedBox(height: 12),
+
+                          // Tanggal lahir
+                          TextFormField(
+                            controller: _birthDateController,
+                            decoration: _inputDecoration(
+                              label: 'Tanggal lahir (YYYY-MM-DD)',
+                              icon: Icons.cake_outlined,
+                            ),
+                            validator: (v) {
+                              if (v == null || v.isEmpty) {
+                                return 'Tanggal lahir wajib diisi';
+                              }
+                              final regex = RegExp(r'^\d{4}-\d{2}-\d{2}$');
+                              if (!regex.hasMatch(v)) {
+                                return 'Format harus YYYY-MM-DD, contoh 2000-10-01';
+                              }
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: 12),
+
+                          // Password
+                          TextFormField(
+                            controller: _passwordController,
+                            obscureText: _obscurePassword,
+                            decoration: _inputDecoration(
+                              label: 'Password',
+                              icon: Icons.lock_outline,
+                            ).copyWith(
+                              suffixIcon: IconButton(
+                                icon: Icon(
+                                  _obscurePassword
+                                      ? Icons.visibility_off_rounded
+                                      : Icons.visibility_rounded,
+                                  size: 20,
+                                  color: Colors.grey.shade600,
+                                ),
+                                onPressed: () {
+                                  setState(() {
+                                    _obscurePassword = !_obscurePassword;
+                                  });
+                                },
+                              ),
+                            ),
+                            validator: (v) => v == null || v.length < 6
+                                ? 'Password minimal 6 karakter'
+                                : null,
+                          ),
+                          const SizedBox(height: 12),
+
+                          // Konfirmasi Password
+                          TextFormField(
+                            controller: _passwordConfirmController,
+                            obscureText: _obscureConfirmPassword,
+                            decoration: _inputDecoration(
+                              label: 'Konfirmasi password',
+                              icon: Icons.lock_person_outlined,
+                            ).copyWith(
+                              suffixIcon: IconButton(
+                                icon: Icon(
+                                  _obscureConfirmPassword
+                                      ? Icons.visibility_off_rounded
+                                      : Icons.visibility_rounded,
+                                  size: 20,
+                                  color: Colors.grey.shade600,
+                                ),
+                                onPressed: () {
+                                  setState(() {
+                                    _obscureConfirmPassword =
+                                        !_obscureConfirmPassword;
+                                  });
+                                },
+                              ),
+                            ),
+                            validator: (v) =>
+                                v != _passwordController.text
+                                    ? 'Konfirmasi password tidak sama'
+                                    : null,
+                          ),
+
+                          const SizedBox(height: 20),
+
+                          // Tombol daftar
+                          SizedBox(
+                            width: double.infinity,
+                            height: 48,
+                            child: _isLoading
+                                ? const Center(child: CircularProgressIndicator())
+                                : ElevatedButton(
+                                    onPressed: _register,
+                                    style: ElevatedButton.styleFrom(
+                                      padding: EdgeInsets.zero,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(20),
+                                      ),
+                                      elevation: 0,
+                                      backgroundColor: Colors.transparent,
+                                    ),
+                                    child: Ink(
+                                      decoration: BoxDecoration(
+                                        gradient: const LinearGradient(
+                                          colors: [
+                                            _primaryBlue,
+                                            Color(0xFF3C82B2),
+                                          ],
+                                          begin: Alignment.centerLeft,
+                                          end: Alignment.centerRight,
+                                        ),
+                                        borderRadius: BorderRadius.circular(20),
+                                      ),
+                                      child: Container(
+                                        alignment: Alignment.center,
+                                        child: const Text(
+                                          'Daftar Sekarang',
+                                          style: TextStyle(
+                                            fontSize: 15,
+                                            fontWeight: FontWeight.w600,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                ],
+              ),
             ),
           ),
         ),

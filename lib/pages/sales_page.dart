@@ -12,6 +12,7 @@ import '../services/customer_service.dart';
 class SalesPage extends StatefulWidget {
   final VoidCallback onUserActivity;
 
+
   const SalesPage({super.key, required this.onUserActivity});
 
   @override
@@ -19,6 +20,7 @@ class SalesPage extends StatefulWidget {
 }
 
 class _SalesPageState extends State<SalesPage> {
+  final NumberFormat decimalFormatter = NumberFormat.decimalPattern('id_ID');
   final ProductService _productService = ProductService();
   final SaleService _saleService = SaleService();
   final CategoryService _categoryService = CategoryService();
@@ -79,13 +81,11 @@ class _SalesPageState extends State<SalesPage> {
 
     setState(() {
       _filteredProducts = _allProducts.where((p) {
-        final matchCategory = _selectedCategoryId == null
-            ? true
-            : p.categoryId == _selectedCategoryId;
+        final matchCategory =
+            _selectedCategoryId == null ? true : p.categoryId == _selectedCategoryId;
 
-        final matchSearch = _searchText.isEmpty
-            ? true
-            : p.name.toLowerCase().contains(lowerSearch);
+        final matchSearch =
+            _searchText.isEmpty ? true : p.name.toLowerCase().contains(lowerSearch);
 
         return matchCategory && matchSearch;
       }).toList();
@@ -98,8 +98,19 @@ class _SalesPageState extends State<SalesPage> {
     );
   }
 
+  // ===== HELPER WARNA STOK =====
+  Color _getStockColor(int stock) {
+    if (stock < 6) {
+      return Colors.red[400] ?? Colors.red;
+    } else if (stock < 15) {
+      return Colors.orange[400] ?? Colors.orange;
+    } else {
+      return Colors.green[500] ?? Colors.green;
+    }
+  }
+
   // cari product dari id
-  Product? _findProductById(int id) {                // NEW
+  Product? _findProductById(int id) {
     try {
       return _allProducts.firstWhere((p) => p.id == id);
     } catch (_) {
@@ -110,7 +121,7 @@ class _SalesPageState extends State<SalesPage> {
   void _addToCart(Product product) {
     widget.onUserActivity();
 
-    // CEK STOK sebelum tambah                              // NEW
+    // CEK STOK sebelum tambah
     final currentQty = _cart[product.id] ?? 0;
     if (currentQty >= product.stock) {
       _showSnack('Stok ${product.name} sudah habis / maksimal.');
@@ -138,14 +149,12 @@ class _SalesPageState extends State<SalesPage> {
 
   int _getQty(Product product) => _cart[product.id] ?? 0;
 
-  int get _totalItems =>
-      _cart.values.fold(0, (prev, qty) => prev + qty);
+  int get _totalItems => _cart.values.fold(0, (prev, qty) => prev + qty);
 
   double get _totalPrice {
     double total = 0;
     for (final entry in _cart.entries) {
-      final matches =
-          _allProducts.where((p) => p.id == entry.key).toList();
+      final matches = _allProducts.where((p) => p.id == entry.key).toList();
       if (matches.isNotEmpty) {
         final product = matches.first;
         total += product.price * entry.value;
@@ -154,7 +163,7 @@ class _SalesPageState extends State<SalesPage> {
     return total;
   }
 
-  // ========= BOTTOM SHEET: DETAIL KERANJANG =========     // NEW
+  // ========= BOTTOM SHEET: DETAIL KERANJANG =========
   void _openCartSheet() {
     widget.onUserActivity();
     if (_cart.isEmpty) {
@@ -210,8 +219,8 @@ class _SalesPageState extends State<SalesPage> {
                         ),
                       ),
                       Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 4),
+                        padding:
+                            const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                         decoration: BoxDecoration(
                           color: _primaryBlue.withOpacity(0.12),
                           borderRadius: BorderRadius.circular(16),
@@ -249,8 +258,7 @@ class _SalesPageState extends State<SalesPage> {
                             borderRadius: BorderRadius.circular(14),
                             boxShadow: [
                               BoxShadow(
-                                color:
-                                    Colors.black.withOpacity(0.04),
+                                color: Colors.black.withOpacity(0.04),
                                 blurRadius: 8,
                                 offset: const Offset(0, 3),
                               ),
@@ -261,21 +269,18 @@ class _SalesPageState extends State<SalesPage> {
                               // Info produk
                               Expanded(
                                 child: Column(
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.start,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
                                       product.name,
                                       style: const TextStyle(
                                         fontSize: 14,
-                                        fontWeight:
-                                            FontWeight.w600,
+                                        fontWeight: FontWeight.w600,
                                       ),
                                     ),
                                     const SizedBox(height: 4),
                                     Text(
-                                      _priceFormatter
-                                          .format(product.price),
+                                      _priceFormatter.format(product.price),
                                       style: TextStyle(
                                         fontSize: 12,
                                         color: Colors.grey[700],
@@ -286,14 +291,15 @@ class _SalesPageState extends State<SalesPage> {
                                       'Stok: ${product.stock}',
                                       style: TextStyle(
                                         fontSize: 11,
-                                        color: Colors.grey[600],
+                                        color: _getStockColor(product.stock),
+                                        fontWeight: FontWeight.w600,
                                       ),
                                     ),
                                   ],
                                 ),
                               ),
 
-                              // Control qty
+                              // Control qty (+ / - / input langsung)
                               Row(
                                 children: [
                                   IconButton(
@@ -306,18 +312,41 @@ class _SalesPageState extends State<SalesPage> {
                                       if (qty <= 1) {
                                         _cart.remove(product.id);
                                       } else {
-                                        _cart[product.id] =
-                                            qty - 1;
+                                        _cart[product.id] = qty - 1;
                                       }
                                       refresh();
                                     },
                                   ),
-                                  Text(
-                                    '$qty',
-                                    style: const TextStyle(
-                                      fontSize: 14,
-                                      fontWeight:
-                                          FontWeight.w600,
+                                  SizedBox(
+                                    width: 50,
+                                    child: TextField(
+                                      key: ValueKey('qty_${product.id}_$qty'),
+                                      keyboardType: TextInputType.number,
+                                      textAlign: TextAlign.center,
+                                      decoration: const InputDecoration(
+                                        isDense: true,
+                                        contentPadding:
+                                            EdgeInsets.symmetric(vertical: 6),
+                                        border: OutlineInputBorder(),
+                                      ),
+                                      controller: TextEditingController(
+                                        text: qty.toString(),
+                                      ),
+                                      onSubmitted: (value) {
+                                        final newQty =
+                                            int.tryParse(value.trim()) ?? qty;
+
+                                        if (newQty <= 0) {
+                                          _cart.remove(product.id);
+                                        } else if (newQty > product.stock) {
+                                          _showSnack(
+                                              'Maksimum ${product.stock} untuk ${product.name}.');
+                                          _cart[product.id] = product.stock;
+                                        } else {
+                                          _cart[product.id] = newQty;
+                                        }
+                                        refresh();
+                                      },
                                     ),
                                   ),
                                   IconButton(
@@ -332,16 +361,13 @@ class _SalesPageState extends State<SalesPage> {
                                         ? null
                                         : () {
                                             final current =
-                                                _cart[product.id] ??
-                                                    0;
-                                            if (current >=
-                                                product.stock) {
+                                                _cart[product.id] ?? 0;
+                                            if (current >= product.stock) {
                                               _showSnack(
                                                   'Stok ${product.name} sudah maksimal.');
                                               return;
                                             }
-                                            _cart[product.id] =
-                                                current + 1;
+                                            _cart[product.id] = current + 1;
                                             refresh();
                                           },
                                   ),
@@ -369,8 +395,7 @@ class _SalesPageState extends State<SalesPage> {
 
                   // TOTAL
                   Row(
-                    mainAxisAlignment:
-                        MainAxisAlignment.spaceBetween,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       const Text(
                         'Total',
@@ -399,8 +424,7 @@ class _SalesPageState extends State<SalesPage> {
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(18),
                         ),
-                        padding: const EdgeInsets.symmetric(
-                            vertical: 12),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
                       ),
                       onPressed: _cart.isEmpty
                           ? null
@@ -444,17 +468,15 @@ class _SalesPageState extends State<SalesPage> {
             TextEditingController();
 
         double kembalian = 0;
-        double sisaBayar = 0; // NEW
+        double sisaBayar = 0;
 
         // gunakan selectedCustomer global sebagai default di picker
         Customer? selectedCustomer = _selectedCustomer;
 
         return StatefulBuilder(
           builder: (context, setSheetState) {
-            void _updateAmounts() {                  // UPDATED
-              final text = paidAmountController.text
-                  .replaceAll('.', '')
-                  .trim();
+            void _updateAmounts() {
+              final text = paidAmountController.text.replaceAll('.', '').trim();
               final bayar = double.tryParse(text) ?? 0;
 
               setSheetState(() {
@@ -472,9 +494,7 @@ class _SalesPageState extends State<SalesPage> {
             }
 
             Future<void> _submit() async {
-              final text = paidAmountController.text
-                  .replaceAll('.', '')
-                  .trim();
+              final text = paidAmountController.text.replaceAll('.', '').trim();
               final bayar = double.tryParse(text) ?? 0;
 
               final isKasbon = bayar < _totalPrice;
@@ -487,8 +507,7 @@ class _SalesPageState extends State<SalesPage> {
                   return;
                 }
                 if (selectedCustomer == null) {
-                  _showSnack(
-                      'Untuk kasbon, pilih pelanggan terlebih dahulu.');
+                  _showSnack('Untuk kasbon, pilih pelanggan terlebih dahulu.');
                   return;
                 }
               }
@@ -502,8 +521,7 @@ class _SalesPageState extends State<SalesPage> {
                   paymentMethod: 'cash',
                 );
 
-                final status =
-                    res['status']?.toString() ?? 'paid';
+                final status = res['status']?.toString() ?? 'paid';
 
                 Navigator.pop(context); // tutup bottom sheet
                 setState(() {
@@ -515,8 +533,7 @@ class _SalesPageState extends State<SalesPage> {
                   _showSnack(
                       'Transaksi tersimpan sebagai KASBON (utang pelanggan).');
                 } else {
-                  _showSnack(
-                      'Transaksi LUNAS tersimpan di riwayat.');
+                  _showSnack('Transaksi LUNAS tersimpan di riwayat.');
                 }
               } catch (e) {
                 _showSnack('Gagal menyimpan transaksi: $e');
@@ -530,220 +547,394 @@ class _SalesPageState extends State<SalesPage> {
                 top: 16,
                 bottom: MediaQuery.of(context).viewInsets.bottom + 16,
               ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    width: 40,
-                    height: 4,
-                    margin: const EdgeInsets.only(bottom: 16),
-                    decoration: BoxDecoration(
-                      color: Colors.grey[400],
-                      borderRadius: BorderRadius.circular(2),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 4,
+                      margin: const EdgeInsets.only(bottom: 16),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[400],
+                        borderRadius: BorderRadius.circular(2),
+                      ),
                     ),
-                  ),
-                  const Text(
-                    'Pembayaran',
-                    style: TextStyle(
-                        fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 12),
 
-                  // LIST PRODUK
-                  SizedBox(
-                    height: 180,
-                    child: ListView(
-                      children: _cart.entries.map((entry) {
-                        final matches = _allProducts
-                            .where((p) => p.id == entry.key)
-                            .toList();
-                        if (matches.isEmpty) {
-                          return const SizedBox.shrink();
-                        }
-                        final product = matches.first;
-
-                        final qty = entry.value;
-                        final subtotal =
-                            product.price * qty;
-                        return ListTile(
-                          dense: true,
-                          contentPadding:
-                              EdgeInsets.zero,
-                          title: Text(product.name),
-                          subtitle: Text(
-                              '${qty}x  ${_priceFormatter.format(product.price)}'),
-                          trailing: Text(
-                            _priceFormatter
-                                .format(subtotal),
-                            style: const TextStyle(
-                                fontWeight:
-                                    FontWeight.bold),
+                    // HEADER TOTAL YANG CANTIK
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: _primaryBlue,
+                        borderRadius: BorderRadius.circular(18),
+                        boxShadow: [
+                          BoxShadow(
+                            color: _primaryBlue.withOpacity(0.3),
+                            blurRadius: 14,
+                            offset: const Offset(0, 6),
                           ),
-                        );
-                      }).toList(),
-                    ),
-                  ),
-
-                  const Divider(),
-
-                  // TOTAL
-                  Row(
-                    mainAxisAlignment:
-                        MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        'Total',
-                        style: TextStyle(
-                            fontSize: 16,
-                            fontWeight:
-                                FontWeight.bold),
+                        ],
                       ),
-                      Text(
-                        _priceFormatter
-                            .format(_totalPrice),
-                        style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight:
-                                FontWeight.bold),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-
-                  // NAMA PELANGGAN PICKER
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      'Nama Pelanggan (opsional)\n'
-                      'Wajib dipilih kalau bayar kurang (kasbon).',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.purple[400],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-
-                  DropdownButtonFormField<Customer?>(
-                    value: selectedCustomer,
-                    isExpanded: true,
-                    decoration:
-                        const InputDecoration(
-                      hintText:
-                          'Pilih pelanggan atau biarkan kosong kalau lunas',
-                      border:
-                          UnderlineInputBorder(),
-                    ),
-                    items: [
-                      const DropdownMenuItem<
-                          Customer?>(
-                        value: null,
-                        child:
-                            Text('Tanpa pelanggan'),
-                      ),
-                      ..._customers.map(
-                        (c) =>
-                            DropdownMenuItem<Customer?>(
-                          value: c,
-                          child: Text(c.name),
-                        ),
-                      ),
-                    ],
-                    onChanged: (value) {
-                      setSheetState(() {
-                        selectedCustomer = value;
-                      });
-                    },
-                  ),
-
-                  const SizedBox(height: 8),
-
-                  // UANG DITERIMA
-                  TextField(
-                    controller: paidAmountController,
-                    keyboardType:
-                        TextInputType.number,
-                    decoration:
-                        const InputDecoration(
-                      labelText:
-                          'Uang diterima (boleh 0 kalau full kasbon)',
-                      hintText: 'contoh: 50000',
-                    ),
-                    onChanged: (_) => _updateAmounts(),
-                  ),
-                  const SizedBox(height: 8),
-
-                  // KEMBALIAN + SISA BAYAR
-                  Row(
-                    mainAxisAlignment:
-                        MainAxisAlignment
-                            .spaceBetween,
-                    children: [
-                      const Text('Kembalian'),
-                      Text(
-                        _priceFormatter.format(
-                            kembalian),
-                        style: const TextStyle(
-                            fontWeight:
-                                FontWeight.bold),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  Row(
-                    mainAxisAlignment:
-                        MainAxisAlignment
-                            .spaceBetween,
-                    children: [
-                      const Text(
-                        'Sisa yang harus dibayar',
-                      ),
-                      Text(
-                        _priceFormatter.format(
-                            sisaBayar),
-                        style: TextStyle(
-                          fontWeight:
-                              FontWeight.bold,
-                          color: sisaBayar > 0
-                              ? Colors.red[400]
-                              : Colors
-                                  .grey[800],
-                        ),
-                      ),
-                    ],
-                  ),
-                  if (sisaBayar > 0)
-                    Align(
-                      alignment:
-                          Alignment.centerLeft,
-                      child: Padding(
-                        padding:
-                            const EdgeInsets
-                                    .only(
-                                top: 4.0),
-                        child: Text(
-                          'Sisa ini akan tercatat sebagai KASBON (utang pelanggan).',
-                          style: TextStyle(
-                            fontSize: 11,
-                            color:
-                                Colors.red[400],
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.18),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.receipt_long_rounded,
+                              color: Colors.white,
+                              size: 22,
+                            ),
                           ),
-                        ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'Total Pembayaran',
+                                  style: TextStyle(
+                                    color: Colors.white70,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  _priceFormatter.format(_totalPrice),
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 10, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.15),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Text(
+                              '${_totalItems} item',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
 
-                  const SizedBox(height: 16),
+                    const SizedBox(height: 14),
 
-                  // BUTTON SIMPAN
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: _submit,
-                      child: const Text(
-                          'Simpan Transaksi'),
+                    // CARD DETAIL ITEM
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(18),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.05),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: const [
+                              Icon(
+                                Icons.shopping_bag_outlined,
+                                size: 18,
+                                color: _primaryBlue,
+                              ),
+                              SizedBox(width: 6),
+                              Text(
+                                'Detail Pesanan',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          SizedBox(
+                            height: 180,
+                            child: ListView(
+                              children: _cart.entries.map((entry) {
+                                final matches = _allProducts
+                                    .where((p) => p.id == entry.key)
+                                    .toList();
+                                if (matches.isEmpty) {
+                                  return const SizedBox.shrink();
+                                }
+                                final product = matches.first;
+
+                                final qty = entry.value;
+                                final subtotal = product.price * qty;
+                                return ListTile(
+                                  dense: true,
+                                  contentPadding: EdgeInsets.zero,
+                                  title: Text(
+                                    product.name,
+                                    style: const TextStyle(fontSize: 13),
+                                  ),
+                                  subtitle: Text(
+                                    '${qty}x  ${_priceFormatter.format(product.price)}',
+                                    style: const TextStyle(fontSize: 11),
+                                  ),
+                                  trailing: Text(
+                                    _priceFormatter.format(subtotal),
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                );
+                              }).toList(),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+
+                    const SizedBox(height: 14),
+
+                    // CARD PELANGGAN + PEMBAYARAN
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(18),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.05),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: const [
+                              Icon(
+                                Icons.person_outline,
+                                size: 18,
+                                color: _primaryBlue,
+                              ),
+                              SizedBox(width: 6),
+                              Text(
+                                'Informasi Pelanggan',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            'Nama Pelanggan (opsional)\n'
+                            'Wajib dipilih kalau bayar kurang (kasbon).',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.purple[400],
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+
+                          DropdownButtonFormField<Customer?>(
+                            value: selectedCustomer,
+                            isExpanded: true,
+                            decoration: const InputDecoration(
+                              hintText:
+                                  'Pilih pelanggan atau biarkan kosong kalau lunas',
+                              border: UnderlineInputBorder(),
+                            ),
+                            items: [
+                              const DropdownMenuItem<Customer?>(
+                                value: null,
+                                child: Text('Tanpa pelanggan'),
+                              ),
+                              ..._customers.map(
+                                (c) => DropdownMenuItem<Customer?>(
+                                  value: c,
+                                  child: Text(c.name),
+                                ),
+                              ),
+                            ],
+                            onChanged: (value) {
+                              setSheetState(() {
+                                selectedCustomer = value;
+                              });
+                            },
+                          ),
+
+                          const SizedBox(height: 12),
+
+                          Row(
+                            children: const [
+                              Icon(
+                                Icons.payments_outlined,
+                                size: 18,
+                                color: _primaryBlue,
+                              ),
+                              SizedBox(width: 6),
+                              Text(
+                                'Rincian Pembayaran',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 6),
+
+
+TextField(
+  controller: paidAmountController,
+  keyboardType: TextInputType.number,
+  decoration: const InputDecoration(
+    labelText: 'Uang diterima (boleh 0 kalau full kasbon)',
+    hintText: 'contoh: 50.000',
+    border: OutlineInputBorder(),
+  ),
+  onChanged: (value) {
+    // Ambil angka asli (hapus titik)
+    final digits = value.replaceAll(RegExp(r'[^0-9]'), '');
+
+    if (digits.isEmpty) {
+      paidAmountController.value = const TextEditingValue(
+        text: '',
+        selection: TextSelection.collapsed(offset: 0),
+      );
+      _updateAmounts();
+      return;
+    }
+
+    // Format ulang: 1000 -> 1.000
+    final number = int.parse(digits);
+    final newText = decimalFormatter.format(number);
+
+    // Update textfield tanpa kursor lompat ke depan
+    paidAmountController.value = TextEditingValue(
+      text: newText,
+      selection: TextSelection.collapsed(offset: newText.length),
+    );
+
+    _updateAmounts();
+  },
+),
+
+                          const SizedBox(height: 10),
+
+                          Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: _primaryBlue.withOpacity(0.06),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Column(
+                              children: [
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    const Text(
+                                      'Kembalian',
+                                      style: TextStyle(fontSize: 12),
+                                    ),
+                                    Text(
+                                      _priceFormatter.format(kembalian),
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 13,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 6),
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    const Text(
+                                      'Sisa yang harus dibayar',
+                                      style: TextStyle(fontSize: 12),
+                                    ),
+                                    Text(
+                                      _priceFormatter.format(sisaBayar),
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 13,
+                                        color: sisaBayar > 0
+                                            ? Colors.red[400]
+                                            : Colors.grey[800],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                if (sisaBayar > 0)
+                                  Align(
+                                    alignment: Alignment.centerLeft,
+                                    child: Padding(
+                                      padding: const EdgeInsets.only(top: 4.0),
+                                      child: Text(
+                                        'Sisa ini akan tercatat sebagai KASBON (utang pelanggan).',
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          color: Colors.red[400],
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 18),
+
+                    // BUTTON SIMPAN
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: _primaryBlue,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(18),
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                        ),
+                        onPressed: _submit,
+                        child: const Text(
+                          'Simpan Transaksi',
+                          style: TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             );
           },
@@ -769,158 +960,91 @@ class _SalesPageState extends State<SalesPage> {
         ),
         child: SafeArea(
           child: _isLoading
-              ? const Center(
-                  child:
-                      CircularProgressIndicator())
+              ? const Center(child: CircularProgressIndicator())
               : _allProducts.isEmpty
-                  ? const Center(
-                      child: Text(
-                          'Belum ada produk'))
+                  ? const Center(child: Text('Belum ada produk'))
                   : Column(
                       children: [
                         const SizedBox(height: 8),
 
                         // ====== SEARCH + DROPDOWN KATEGORI ======
                         Padding(
-                          padding:
-                              const EdgeInsets
-                                      .symmetric(
-                                  horizontal: 16),
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
                           child: Row(
                             children: [
                               // SEARCH
                               Expanded(
-                                child:
-                                    Container(
-                                  decoration:
-                                      BoxDecoration(
-                                    color: Colors
-                                        .white,
-                                    borderRadius:
-                                        BorderRadius
-                                            .circular(
-                                                24),
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(24),
                                     boxShadow: [
                                       BoxShadow(
-                                        color: Colors
-                                            .black
-                                            .withOpacity(
-                                                0.05),
-                                        blurRadius:
-                                            10,
-                                        offset:
-                                            const Offset(
-                                                0,
-                                                4),
+                                        color: Colors.black.withOpacity(0.05),
+                                        blurRadius: 10,
+                                        offset: const Offset(0, 4),
                                       ),
                                     ],
                                   ),
-                                  child:
-                                      TextField(
-                                    decoration:
-                                        const InputDecoration(
-                                      hintText:
-                                          'Cari produk...',
-                                      border:
-                                          InputBorder
-                                              .none,
-                                      prefixIcon:
-                                          Icon(Icons
-                                              .search),
+                                  child: TextField(
+                                    decoration: const InputDecoration(
+                                      hintText: 'Cari produk...',
+                                      border: InputBorder.none,
+                                      prefixIcon: Icon(Icons.search),
                                       contentPadding: EdgeInsets.symmetric(
-                                          horizontal:
-                                              16,
-                                          vertical:
-                                              12),
+                                        horizontal: 16,
+                                        vertical: 12,
+                                      ),
                                     ),
-                                    onChanged:
-                                        (value) {
-                                      _searchText =
-                                          value;
+                                    onChanged: (value) {
+                                      _searchText = value;
                                       _applyFilter();
                                     },
                                   ),
                                 ),
                               ),
 
-                              const SizedBox(
-                                  width: 10),
+                              const SizedBox(width: 10),
 
                               // DROPDOWN KATEGORI
                               Container(
-                                padding:
-                                    const EdgeInsets
-                                            .symmetric(
-                                        horizontal:
-                                            12,
-                                        vertical:
-                                            8),
-                                decoration:
-                                    BoxDecoration(
-                                  color:
-                                      Colors.white,
-                                  borderRadius:
-                                      BorderRadius
-                                          .circular(
-                                              24),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 12, vertical: 8),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(24),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: Colors
-                                          .black
-                                          .withOpacity(
-                                              0.06),
-                                      blurRadius:
-                                          8,
-                                      offset:
-                                          const Offset(
-                                              0,
-                                              3),
+                                      color: Colors.black.withOpacity(0.06),
+                                      blurRadius: 8,
+                                      offset: const Offset(0, 3),
                                     ),
                                   ],
                                 ),
-                                child:
-                                    DropdownButtonHideUnderline(
-                                  child:
-                                      DropdownButton<
-                                          int?>(
-                                    value:
-                                        _selectedCategoryId,
-                                    icon:
-                                        const Icon(
-                                      Icons
-                                          .keyboard_arrow_down_rounded,
+                                child: DropdownButtonHideUnderline(
+                                  child: DropdownButton<int?>(
+                                    value: _selectedCategoryId,
+                                    icon: const Icon(
+                                      Icons.keyboard_arrow_down_rounded,
                                       size: 18,
                                     ),
-                                    style:
-                                        const TextStyle(
-                                      fontSize:
-                                          13,
-                                      color: Colors
-                                          .black,
+                                    style: const TextStyle(
+                                      fontSize: 13,
+                                      color: Colors.black,
                                     ),
-                                    onChanged:
-                                        (value) {
-                                      _selectedCategoryId =
-                                          value;
+                                    onChanged: (value) {
+                                      _selectedCategoryId = value;
                                       _applyFilter();
                                     },
                                     items: [
-                                      const DropdownMenuItem<
-                                          int?>(
-                                        value:
-                                            null,
-                                        child: Text(
-                                            'Semua'),
+                                      const DropdownMenuItem<int?>(
+                                        value: null,
+                                        child: Text('Semua'),
                                       ),
-                                      ..._categories
-                                          .map(
-                                        (c) =>
-                                            DropdownMenuItem<
-                                                int?>(
-                                          value:
-                                              c.id,
-                                          child: Text(
-                                              c.name),
+                                      ..._categories.map(
+                                        (c) => DropdownMenuItem<int?>(
+                                          value: c.id,
+                                          child: Text(c.name),
                                         ),
                                       ),
                                     ],
@@ -931,62 +1055,33 @@ class _SalesPageState extends State<SalesPage> {
                           ),
                         ),
 
-                        const SizedBox(
-                            height: 12),
+                        const SizedBox(height: 12),
 
                         // ====== GRID PRODUK ======
                         Expanded(
-                          child:
-                              Container(
-                            decoration:
-                                const BoxDecoration(
-                              color:
-                                  Colors.white,
-                              borderRadius:
-                                  BorderRadius
-                                      .only(
-                                topLeft: Radius
-                                    .circular(
-                                        24),
-                                topRight: Radius
-                                    .circular(
-                                        24),
+                          child: Container(
+                            decoration: const BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.only(
+                                topLeft: Radius.circular(24),
+                                topRight: Radius.circular(24),
                               ),
                             ),
-                            child:
-                                GridView
-                                    .builder(
+                            child: GridView.builder(
                               padding:
-                                  const EdgeInsets
-                                          .fromLTRB(
-                                      16,
-                                      16,
-                                      16,
-                                      90),
+                                  const EdgeInsets.fromLTRB(16, 16, 16, 90),
                               gridDelegate:
                                   const SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount:
-                                    2,
-                                mainAxisSpacing:
-                                    12,
-                                crossAxisSpacing:
-                                    12,
-                                childAspectRatio:
-                                    0.78,
+                                crossAxisCount: 2,
+                                mainAxisSpacing: 12,
+                                crossAxisSpacing: 12,
+                                childAspectRatio: 0.78,
                               ),
-                              itemCount:
-                                  _filteredProducts
-                                      .length,
-                              itemBuilder:
-                                  (context,
-                                      index) {
-                                final p =
-                                    _filteredProducts[
-                                        index];
-                                final qty =
-                                    _getQty(p);
-                                return _buildProductCard(
-                                    p, qty);
+                              itemCount: _filteredProducts.length,
+                              itemBuilder: (context, index) {
+                                final p = _filteredProducts[index];
+                                final qty = _getQty(p);
+                                return _buildProductCard(p, qty);
                               },
                             ),
                           ),
@@ -1000,194 +1095,146 @@ class _SalesPageState extends State<SalesPage> {
       ),
     );
   }
-
-  Widget _buildProductCard(Product p, int qty) {
-    return GestureDetector(
-      onTap: () => _addToCart(p),
-      onLongPress: () => _removeFromCart(p),
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(18),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.06),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment:
-              CrossAxisAlignment.start,
-          children: [
-            // GAMBAR
-            Expanded(
-              child: ClipRRect(
-                borderRadius:
-                    const BorderRadius.only(
-                  topLeft: Radius.circular(18),
-                  topRight: Radius.circular(18),
-                ),
-                child: SizedBox.expand(
-                  child: p.imageUrl != null
-                      ? Image.network(
-                          p.imageUrl!,
-                          fit: BoxFit.cover,
-                        )
-                      : Container(
-                          color:
-                              Colors.grey[200],
-                          child: const Icon(
-                            Icons
-                                .image_outlined,
-                            size: 40,
-                            color:
-                                Colors.grey,
-                          ),
-                        ),
-                ),
-              ),
-            ),
-
-            // ISI
-            Padding(
-              padding: const EdgeInsets
-                      .symmetric(
-                  horizontal: 10,
-                  vertical: 8),
-              child: Column(
-                crossAxisAlignment:
-                    CrossAxisAlignment.start,
-                children: [
-                  // HARGA DALAM PILL BIRU
-                  Container(
-                    padding:
-                        const EdgeInsets
-                                .symmetric(
-                            horizontal: 10,
-                            vertical: 4),
-                    decoration:
-                        BoxDecoration(
-                      color: _primaryBlue,
-                      borderRadius:
-                          BorderRadius
-                              .circular(
-                                  16),
-                    ),
-                    child: Text(
-                      _priceFormatter
-                          .format(p.price),
-                      style:
-                          const TextStyle(
-                        fontSize: 11,
-                        color:
-                            Colors.white,
-                        fontWeight:
-                            FontWeight
-                                .w600,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(
-                      height: 6),
-                  Text(
-                    p.name,
-                    maxLines: 2,
-                    overflow:
-                        TextOverflow
-                            .ellipsis,
-                    style: const TextStyle(
-                      fontSize: 13,
-                      fontWeight:
-                          FontWeight
-                              .w600,
-                    ),
-                  ),
-                  const SizedBox(
-                      height: 4),
-                  Row(
-                    mainAxisAlignment:
-                        MainAxisAlignment
-                            .spaceBetween,
-                    children: [
-                      Text(
-                        '${p.stock} Stok',
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: Colors
-                              .grey[600],
-                        ),
-                      ),
-                      if (qty > 0)
-                        Container(
-                          padding:
-                              const EdgeInsets
-                                      .symmetric(
-                                  horizontal:
-                                      8,
-                                  vertical:
-                                      2),
-                          decoration:
-                              BoxDecoration(
-                            color: _primaryBlue
-                                .withOpacity(
-                                    0.15),
-                            borderRadius:
-                                BorderRadius
-                                    .circular(
-                                        12),
-                          ),
-                          child: Text(
-                            'x$qty',
-                            style:
-                                const TextStyle(
-                              fontSize:
-                                  11,
-                              color:
-                                  _primaryBlue,
-                              fontWeight:
-                                  FontWeight
-                                      .w600,
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
+Widget _buildProductCard(Product p, int qty) {
+  return GestureDetector(
+    onTap: () => _addToCart(p),
+    onLongPress: () => _removeFromCart(p),
+    child: Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
-    );
-  }
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // GAMBAR
+          Expanded(
+            child: ClipRRect(
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(18),
+                topRight: Radius.circular(18),
+              ),
+              child: SizedBox.expand(
+                child: p.imageUrl != null
+                    ? Image.network(
+                        p.imageUrl!,
+                        fit: BoxFit.cover,
+                      )
+                    : Container(
+                        color: Colors.grey[200],
+                        child: const Icon(
+                          Icons.image_outlined,
+                          size: 40,
+                          color: Colors.grey,
+                        ),
+                      ),
+              ),
+            ),
+          ),
+
+          // ISI KARTU
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // HARGA
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: _primaryBlue,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Text(
+                    _priceFormatter.format(p.price),
+                    style: const TextStyle(
+                      fontSize: 11,
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 6),
+
+                // NAMA
+                Text(
+                  p.name,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 4),
+
+                // STOK + QTY
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      '${p.stock} Stok',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: _getStockColor(p.stock),
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+
+                    if (qty > 0)
+                      Container(
+                        padding:
+                            const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: _primaryBlue.withOpacity(0.15),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          'x$qty',
+                          style: const TextStyle(
+                            fontSize: 11,
+                            color: _primaryBlue,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
 
   Widget _buildBottomCartBar() {
     return SafeArea(
       top: false,
       child: Padding(
-        padding:
-            const EdgeInsets.symmetric(
-                horizontal: 16, vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         child: GestureDetector(
-          // DULUNYA _openPaymentSheet, SEKARANG DETAIL KERANJANG   // UPDATED
-          onTap:
-              _cart.isEmpty ? null : _openCartSheet,
+          onTap: _cart.isEmpty ? null : _openCartSheet,
           child: Opacity(
             opacity: _cart.isEmpty ? 0.4 : 1,
             child: Container(
               padding:
-                  const EdgeInsets.symmetric(
-                      horizontal: 18, vertical: 12),
+                  const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
               decoration: BoxDecoration(
                 color: _primaryBlue,
-                borderRadius:
-                    BorderRadius.circular(32),
+                borderRadius: BorderRadius.circular(32),
                 boxShadow: [
                   BoxShadow(
-                    color: _primaryBlue
-                        .withOpacity(0.5),
+                    color: _primaryBlue.withOpacity(0.5),
                     blurRadius: 16,
                     offset: const Offset(0, 6),
                   ),
@@ -1196,8 +1243,7 @@ class _SalesPageState extends State<SalesPage> {
               child: Row(
                 children: [
                   const Icon(
-                    Icons
-                        .shopping_bag_outlined,
+                    Icons.shopping_bag_outlined,
                     color: Colors.white,
                   ),
                   const SizedBox(width: 10),
@@ -1206,47 +1252,34 @@ class _SalesPageState extends State<SalesPage> {
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 13,
-                      fontWeight:
-                          FontWeight.w600,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                   const Spacer(),
                   // badge item
                   Container(
-                    padding:
-                        const EdgeInsets
-                                .symmetric(
-                            horizontal: 8,
-                            vertical: 4),
-                    decoration:
-                        BoxDecoration(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
                       color: Colors.white,
-                      borderRadius:
-                          BorderRadius
-                              .circular(
-                                  12),
+                      borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
                       '${_totalItems}x',
-                      style:
-                          const TextStyle(
+                      style: const TextStyle(
                         fontSize: 11,
-                        fontWeight:
-                            FontWeight.bold,
-                        color:
-                            _primaryBlue,
+                        fontWeight: FontWeight.bold,
+                        color: _primaryBlue,
                       ),
                     ),
                   ),
                   const SizedBox(width: 12),
                   Text(
-                    _priceFormatter
-                        .format(_totalPrice),
+                    _priceFormatter.format(_totalPrice),
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 14,
-                      fontWeight:
-                          FontWeight.bold,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                 ],
