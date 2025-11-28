@@ -48,7 +48,7 @@ class _CustomerDetailPageState extends State<CustomerDetailPage> {
     try {
       final allSales = await _saleService.getSales();
 
-      // filter berdasarkan nama customer (seperti sebelumnya)
+      // filter berdasarkan nama customer
       _sales = allSales
           .where((s) =>
               (s.customerName ?? '').toLowerCase() ==
@@ -103,120 +103,216 @@ class _CustomerDetailPageState extends State<CustomerDetailPage> {
 
     final bool? result = await showDialog<bool>(
       context: context,
+      barrierDismissible: true,
       builder: (context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(18),
-          ),
-          title: const Text('Edit Pelanggan'),
-          content: SingleChildScrollView(
-            child: Form(
-              key: formKey,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TextFormField(
-                    controller: nameController,
-                    decoration:
-                        const InputDecoration(labelText: 'Nama lengkap'),
-                    validator: (v) =>
-                        v == null || v.isEmpty ? 'Nama wajib diisi' : null,
-                  ),
-                  TextFormField(
-                    controller: phoneController,
-                    decoration:
-                        const InputDecoration(labelText: 'No. Telepon'),
-                  ),
-                  TextFormField(
-                    controller: emailController,
-                    decoration:
-                        const InputDecoration(labelText: 'Email (opsional)'),
-                  ),
-                  TextFormField(
-                    controller: addressController,
-                    decoration:
-                        const InputDecoration(labelText: 'Alamat (opsional)'),
-                  ),
-                  TextFormField(
-                    controller: companyController,
-                    decoration: const InputDecoration(
-                        labelText: 'Instansi/Perusahaan (opsional)'),
-                  ),
-                  TextFormField(
-                    controller: noteController,
-                    decoration:
-                        const InputDecoration(labelText: 'Catatan (opsional)'),
+        return Dialog(
+          insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+          backgroundColor: Colors.transparent,
+          child: Center(
+            child: Container(
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: const Color(0xFFF8F7FF),
+                borderRadius: BorderRadius.circular(26),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.18),
+                    blurRadius: 24,
+                    offset: const Offset(0, 12),
                   ),
                 ],
               ),
+              padding: const EdgeInsets.fromLTRB(20, 22, 20, 16),
+              child: SingleChildScrollView(
+                child: Form(
+                  key: formKey,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            height: 42,
+                            width: 42,
+                            decoration: BoxDecoration(
+                              color: _primaryBlue.withOpacity(0.12),
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                            child: const Icon(
+                              Icons.person_outline,
+                              color: _primaryBlue,
+                              size: 24,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          const Text(
+                            'Edit Pelanggan',
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.black87,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      const Text(
+                        'Perbarui informasi pelanggan agar data kasir selalu rapi dan terbaru.',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Color(0xFF8C8CA1),
+                        ),
+                      ),
+                      const SizedBox(height: 18),
+
+                      // Nama
+                      _editField(
+                        label: 'Nama lengkap',
+                        controller: nameController,
+                        icon: Icons.badge_outlined,
+                        validator: (v) =>
+                            v == null || v.isEmpty ? 'Nama wajib diisi' : null,
+                      ),
+                      // Telepon
+                      _editField(
+                        label: 'No. Telepon',
+                        controller: phoneController,
+                        icon: Icons.phone_outlined,
+                        keyboardType: TextInputType.phone,
+                      ),
+                      // Email
+                      _editField(
+                        label: 'Email (opsional)',
+                        controller: emailController,
+                        icon: Icons.email_outlined,
+                        keyboardType: TextInputType.emailAddress,
+                      ),
+                      // Alamat
+                      _editField(
+                        label: 'Alamat (opsional)',
+                        controller: addressController,
+                        icon: Icons.location_on_outlined,
+                      ),
+                      // Instansi / perusahaan
+                      _editField(
+                        label: 'Instansi/Perusahaan (opsional)',
+                        controller: companyController,
+                        icon: Icons.apartment_outlined,
+                      ),
+                      // Catatan
+                      _editField(
+                        label: 'Catatan (opsional)',
+                        controller: noteController,
+                        icon: Icons.sticky_note_2_outlined,
+                      ),
+
+                      const SizedBox(height: 18),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          TextButton(
+                            onPressed: () => Navigator.pop<bool>(context, false),
+                            child: const Text(
+                              'Batal',
+                              style: TextStyle(
+                                color: Colors.grey,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          ElevatedButton.icon(
+                            style: ElevatedButton.styleFrom(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+                              backgroundColor: _primaryBlue,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(22),
+                              ),
+                              elevation: 0,
+                            ),
+                            icon: const Icon(
+                              Icons.check_rounded,
+                              size: 18,
+                            ),
+                           label: const Text(
+  'Simpan',
+  style: TextStyle(
+    fontWeight: FontWeight.w600,
+    color: Colors.white, // ← ini bikin teks jadi putih
+  ),
+                            ),
+                            onPressed: () async {
+                              if (!formKey.currentState!.validate()) return;
+
+                              try {
+                                await _customerService.updateCustomer(
+                                  id: _customer.id,
+                                  name: nameController.text.trim(),
+                                  email: emailController.text.trim().isEmpty
+                                      ? null
+                                      : emailController.text.trim(),
+                                  phone: phoneController.text.trim().isEmpty
+                                      ? null
+                                      : phoneController.text.trim(),
+                                  address: addressController.text.trim().isEmpty
+                                      ? null
+                                      : addressController.text.trim(),
+                                  company: companyController.text.trim().isEmpty
+                                      ? null
+                                      : companyController.text.trim(),
+                                  note: noteController.text.trim().isEmpty
+                                      ? null
+                                      : noteController.text.trim(),
+                                );
+
+                                // update data di UI
+                                setState(() {
+                                  _customer = _customer.copyWith(
+                                    name: nameController.text.trim(),
+                                    email: emailController.text.trim().isEmpty
+                                        ? null
+                                        : emailController.text.trim(),
+                                    phone: phoneController.text.trim().isEmpty
+                                        ? null
+                                        : phoneController.text.trim(),
+                                    address:
+                                        addressController.text.trim().isEmpty
+                                            ? null
+                                            : addressController.text.trim(),
+                                    company:
+                                        companyController.text.trim().isEmpty
+                                            ? null
+                                            : companyController.text.trim(),
+                                    note: noteController.text.trim().isEmpty
+                                        ? null
+                                        : noteController.text.trim(),
+                                  );
+                                });
+
+                                if (context.mounted) {
+                                  Navigator.pop<bool>(context, true);
+                                }
+                              } catch (e) {
+                                _showSnack('Error: $e');
+                              }
+                            },
+                          ),
+                        ],
+                      )
+                    ],
+                  ),
+                ),
+              ),
             ),
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop<bool>(context, false),
-              child: const Text('Batal'),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                if (!formKey.currentState!.validate()) return;
-
-                try {
-                  await _customerService.updateCustomer(
-                    id: _customer.id,
-                    name: nameController.text.trim(),
-                    email: emailController.text.trim().isEmpty
-                        ? null
-                        : emailController.text.trim(),
-                    phone: phoneController.text.trim().isEmpty
-                        ? null
-                        : phoneController.text.trim(),
-                    address: addressController.text.trim().isEmpty
-                        ? null
-                        : addressController.text.trim(),
-                    company: companyController.text.trim().isEmpty
-                        ? null
-                        : companyController.text.trim(),
-                    note: noteController.text.trim().isEmpty
-                        ? null
-                        : noteController.text.trim(),
-                  );
-
-                  // update data di UI
-                  setState(() {
-                    _customer = _customer.copyWith(
-                      name: nameController.text.trim(),
-                      email: emailController.text.trim().isEmpty
-                          ? null
-                          : emailController.text.trim(),
-                      phone: phoneController.text.trim().isEmpty
-                          ? null
-                          : phoneController.text.trim(),
-                      address: addressController.text.trim().isEmpty
-                          ? null
-                          : addressController.text.trim(),
-                      company: companyController.text.trim().isEmpty
-                          ? null
-                          : companyController.text.trim(),
-                      note: noteController.text.trim().isEmpty
-                          ? null
-                          : noteController.text.trim(),
-                    );
-                  });
-
-                  if (context.mounted) Navigator.pop<bool>(context, true);
-                } catch (e) {
-                  _showSnack('Error: $e');
-                }
-              },
-              child: const Text('Simpan'),
-            ),
-          ],
         );
       },
     );
 
     if (result == true) {
-      // kalau mau, bisa kirim sinyal ke halaman sebelumnya pakai Navigator.pop(result)
+      // kalau mau kirim sinyal ke halaman sebelumnya bisa pakai Navigator.pop(result)
     }
   }
 
@@ -233,10 +329,17 @@ class _CustomerDetailPageState extends State<CustomerDetailPage> {
           title: const Text('Hapus Pelanggan'),
           content: Text('Yakin menghapus ${_customer.name}?'),
           actions: [
-            TextButton(
-              onPressed: () => Navigator.pop<bool>(context, false),
-              child: const Text('Batal'),
-            ),
+TextButton(
+  onPressed: () => Navigator.pop<bool>(context, false),
+  child: const Text(
+    'Batal',
+    style: TextStyle(
+      color: Colors.white,
+      fontWeight: FontWeight.w500,
+    ),
+  ),
+),
+
             ElevatedButton(
               onPressed: () => Navigator.pop<bool>(context, true),
               child: const Text('Hapus'),
@@ -463,13 +566,14 @@ class _CustomerDetailPageState extends State<CustomerDetailPage> {
                     style: TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w700,
+                      color: Colors.white,
                     ),
                   ),
                   Text(
                     '$_jumlahTransaksi transaksi',
                     style: const TextStyle(
                       fontSize: 12,
-                      color: Colors.grey,
+                      color: Colors.white,
                     ),
                   ),
                 ],
@@ -479,15 +583,19 @@ class _CustomerDetailPageState extends State<CustomerDetailPage> {
               _isLoadingSales
                   ? const Padding(
                       padding: EdgeInsets.all(16),
-                      child: CircularProgressIndicator(),
+                      child: CircularProgressIndicator(
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      ),
                     )
                   : _sales.isEmpty
                       ? const Padding(
                           padding: EdgeInsets.all(16),
                           child: Text(
                             'Belum ada transaksi untuk pelanggan ini.',
-                            style:
-                                TextStyle(fontSize: 13, color: Colors.grey),
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: Colors.white,
+                            ),
                           ),
                         )
                       : ListView.builder(
@@ -501,16 +609,24 @@ class _CustomerDetailPageState extends State<CustomerDetailPage> {
                                 ? (sale.totalAmount - sale.paidAmount)
                                 : 0;
 
+                            final Color chipBg =
+                                isUtang ? const Color(0xFFFFF3E0) : const Color(0xFFE8F5E9);
+                            final Color chipText =
+                                isUtang ? const Color(0xFFF57C00) : const Color(0xFF2E7D32);
+                            final IconData statusIcon =
+                                isUtang ? Icons.schedule_outlined : Icons.check_circle_rounded;
+                            final Color statusIconBg =
+                                isUtang ? const Color(0xFFFFCC80) : const Color(0xFFA5D6A7);
+
                             return Container(
                               margin: const EdgeInsets.only(bottom: 10),
                               decoration: BoxDecoration(
                                 color: Colors.white,
-                                borderRadius: BorderRadius.circular(16),
+                                borderRadius: BorderRadius.circular(18),
                                 boxShadow: [
                                   BoxShadow(
-                                    color:
-                                        Colors.black.withOpacity(0.05),
-                                    blurRadius: 10,
+                                    color: Colors.black.withOpacity(0.08),
+                                    blurRadius: 12,
                                     offset: const Offset(0, 4),
                                   )
                                 ],
@@ -520,14 +636,24 @@ class _CustomerDetailPageState extends State<CustomerDetailPage> {
                                   // strip warna kiri
                                   Container(
                                     width: 6,
-                                    height: 80,
+                                    height: 90,
                                     decoration: BoxDecoration(
-                                      color: isUtang
-                                          ? const Color(0xFFFFA726)
-                                          : _primaryBlue,
+                                      gradient: LinearGradient(
+                                        begin: Alignment.topCenter,
+                                        end: Alignment.bottomCenter,
+                                        colors: isUtang
+                                            ? [
+                                                const Color(0xFFFFA726),
+                                                const Color(0xFFF57C00),
+                                              ]
+                                            : [
+                                                _primaryBlue,
+                                                const Color(0xFF1565C0),
+                                              ],
+                                      ),
                                       borderRadius: const BorderRadius.only(
-                                        topLeft: Radius.circular(16),
-                                        bottomLeft: Radius.circular(16),
+                                        topLeft: Radius.circular(18),
+                                        bottomLeft: Radius.circular(18),
                                       ),
                                     ),
                                   ),
@@ -540,65 +666,99 @@ class _CustomerDetailPageState extends State<CustomerDetailPage> {
                                             CrossAxisAlignment.start,
                                         children: [
                                           Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment
-                                                    .spaceBetween,
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
                                             children: [
-                                              Text(
-                                                _priceFormatter.format(
-                                                    sale.totalAmount),
-                                                style: const TextStyle(
-                                                  fontSize: 14,
-                                                  fontWeight:
-                                                      FontWeight.bold,
+                                              Container(
+                                                width: 32,
+                                                height: 32,
+                                                decoration: BoxDecoration(
+                                                  color: statusIconBg,
+                                                  shape: BoxShape.circle,
+                                                ),
+                                                child: Icon(
+                                                  statusIcon,
+                                                  size: 18,
+                                                  color: Colors.white,
                                                 ),
                                               ),
-                                              Container(
-                                                padding:
-                                                    const EdgeInsets
-                                                        .symmetric(
-                                                  horizontal: 10,
-                                                  vertical: 3,
-                                                ),
-                                                decoration:
-                                                    BoxDecoration(
-                                                  color: isUtang
-                                                      ? const Color(
-                                                          0xFFFFF3E0)
-                                                      : const Color(
-                                                          0xFFE8F5E9),
-                                                  borderRadius:
-                                                      BorderRadius
-                                                          .circular(20),
-                                                ),
-                                                child: Text(
-                                                  isUtang
-                                                      ? 'Utang'
-                                                      : 'Lunas',
-                                                  style: TextStyle(
-                                                    fontSize: 11,
-                                                    fontWeight:
-                                                        FontWeight.w600,
-                                                    color: isUtang
-                                                        ? const Color(
-                                                            0xFFF57C00)
-                                                        : const Color(
-                                                            0xFF2E7D32),
-                                                  ),
+                                              const SizedBox(width: 8),
+                                              Expanded(
+                                                child: Column(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  children: [
+                                                    Row(
+                                                      mainAxisAlignment:
+                                                          MainAxisAlignment
+                                                              .spaceBetween,
+                                                      children: [
+                                                        Text(
+                                                          _priceFormatter
+                                                              .format(sale.totalAmount),
+                                                          style: const TextStyle(
+                                                            fontSize: 14,
+                                                            fontWeight:
+                                                                FontWeight.bold,
+                                                          ),
+                                                        ),
+                                                        Container(
+                                                          padding:
+                                                              const EdgeInsets
+                                                                  .symmetric(
+                                                            horizontal: 10,
+                                                            vertical: 3,
+                                                          ),
+                                                          decoration:
+                                                              BoxDecoration(
+                                                            color: chipBg,
+                                                            borderRadius:
+                                                                BorderRadius
+                                                                    .circular(
+                                                                        20),
+                                                          ),
+                                                          child: Row(
+                                                            children: [
+                                                              Icon(
+                                                                statusIcon,
+                                                                size: 14,
+                                                                color: chipText,
+                                                              ),
+                                                              const SizedBox(
+                                                                  width: 4),
+                                                              Text(
+                                                                isUtang
+                                                                    ? 'Utang'
+                                                                    : 'Lunas',
+                                                                style: TextStyle(
+                                                                  fontSize: 11,
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .w600,
+                                                                  color:
+                                                                      chipText,
+                                                                ),
+                                                              ),
+                                                            ],
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                    const SizedBox(height: 4),
+                                                    Text(
+                                                      _dateFormatter
+                                                          .format(sale.createdAt),
+                                                      style: const TextStyle(
+                                                        fontSize: 11,
+                                                        color: Colors.grey,
+                                                      ),
+                                                    ),
+                                                  ],
                                                 ),
                                               ),
                                             ],
                                           ),
                                           const SizedBox(height: 4),
-                                          Text(
-                                            _dateFormatter
-                                                .format(sale.createdAt),
-                                            style: const TextStyle(
-                                              fontSize: 11,
-                                              color: Colors.grey,
-                                            ),
-                                          ),
-                                          const SizedBox(height: 2),
                                           Text(
                                             'Dibayar: ${_priceFormatter.format(sale.paidAmount)}',
                                             style: const TextStyle(
@@ -611,8 +771,7 @@ class _CustomerDetailPageState extends State<CustomerDetailPage> {
                                               style: const TextStyle(
                                                 fontSize: 11,
                                                 color: Color(0xFFD84315),
-                                                fontWeight:
-                                                    FontWeight.w600,
+                                                fontWeight: FontWeight.w600,
                                               ),
                                             ),
                                         ],
@@ -630,6 +789,8 @@ class _CustomerDetailPageState extends State<CustomerDetailPage> {
       ),
     );
   }
+
+  // ===== WIDGET KECIL =====
 
   Widget _summaryItem({
     required String label,
@@ -739,6 +900,54 @@ class _CustomerDetailPageState extends State<CustomerDetailPage> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  /// Field builder khusus untuk dialog edit (underline + icon + label kecil)
+  Widget _editField({
+    required String label,
+    required TextEditingController controller,
+    IconData? icon,
+    String? Function(String?)? validator,
+    TextInputType? keyboardType,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: TextFormField(
+        controller: controller,
+        keyboardType: keyboardType,
+        validator: validator,
+        style: const TextStyle(
+          fontSize: 14,
+        ),
+        decoration: InputDecoration(
+          prefixIcon: icon != null
+              ? Icon(
+                  icon,
+                  size: 18,
+                  color: _primaryBlue,
+                )
+              : null,
+          labelText: label,
+          labelStyle: const TextStyle(
+            fontSize: 12,
+            color: Color(0xFF8C8CA1),
+          ),
+          floatingLabelBehavior: FloatingLabelBehavior.always,
+          enabledBorder: const UnderlineInputBorder(
+            borderSide: BorderSide(
+              color: Color(0xFFDDDDFF),
+              width: 1,
+            ),
+          ),
+          focusedBorder: const UnderlineInputBorder(
+            borderSide: BorderSide(
+              color: _primaryBlue,
+              width: 1.4,
+            ),
+          ),
+        ),
       ),
     );
   }

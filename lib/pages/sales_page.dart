@@ -436,6 +436,7 @@ class _SalesPageState extends State<SalesPage> {
                         'Lanjut ke Pembayaran',
                         style: TextStyle(
                           fontWeight: FontWeight.w600,
+                          color: Colors.white,
                         ),
                       ),
                     ),
@@ -755,7 +756,7 @@ class _SalesPageState extends State<SalesPage> {
                             'Wajib dipilih kalau bayar kurang (kasbon).',
                             style: TextStyle(
                               fontSize: 11,
-                              color: Colors.purple[400],
+                              color: Colors.grey[600],
                             ),
                           ),
                           const SizedBox(height: 4),
@@ -916,23 +917,27 @@ TextField(
                     const SizedBox(height: 18),
 
                     // BUTTON SIMPAN
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: _primaryBlue,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(18),
-                          ),
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                        ),
-                        onPressed: _submit,
-                        child: const Text(
-                          'Simpan Transaksi',
-                          style: TextStyle(fontWeight: FontWeight.w600),
-                        ),
-                      ),
-                    ),
+SizedBox(
+  width: double.infinity,
+  child: ElevatedButton(
+    style: ElevatedButton.styleFrom(
+      backgroundColor: _primaryBlue,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(18),
+      ),
+      padding: const EdgeInsets.symmetric(vertical: 12),
+    ),
+    onPressed: _submit,
+    child: const Text(
+      'Simpan Transaksi',
+      style: TextStyle(
+        fontWeight: FontWeight.w600,
+        color: Colors.white, // teks tombol jadi putih
+      ),
+    ),
+  ),
+),
+
                   ],
                 ),
               ),

@@ -2055,92 +2055,124 @@ class _ReportsPageState extends State<ReportsPage>
         double.tryParse(row['paid_amount'].toString()) ?? 0.0;
     final double remain = total - paid;
 
-    final controller =
-        TextEditingController(text: remain.toStringAsFixed(0));
+final formatter = NumberFormat.decimalPattern('id_ID');
+final controller = TextEditingController(
+  text: formatter.format(remain.toInt()),
+);
 
-    final result = await showModalBottomSheet<bool>(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+
+   final result = await showModalBottomSheet<bool>(
+  context: context,
+  isScrollControlled: true,
+  shape: const RoundedRectangleBorder(
+    borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+  ),
+  builder: (context) {
+    return Padding(
+      padding: EdgeInsets.only(
+        left: 16,
+        right: 16,
+        top: 16,
+        bottom: MediaQuery.of(context).viewInsets.bottom + 16,
       ),
-      builder: (context) {
-        return Padding(
-          padding: EdgeInsets.only(
-            left: 16,
-            right: 16,
-            top: 16,
-            bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Center(
+            child: Container(
+              width: 40,
+              height: 4,
+              margin: const EdgeInsets.only(bottom: 12),
+              decoration: BoxDecoration(
+                color: Colors.grey[400],
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
           ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  margin: const EdgeInsets.only(bottom: 12),
-                  decoration: BoxDecoration(
-                    color: Colors.grey[400],
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-              ),
-              const Text(
-                'Bayar Kasbon',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Total: ${_money.format(total)}',
-                style: const TextStyle(fontSize: 12),
-              ),
-              Text(
-                'Sudah dibayar: ${_money.format(paid)}',
-                style: const TextStyle(fontSize: 12),
-              ),
-              Text(
-                'Sisa: ${_money.format(remain)}',
-                style: const TextStyle(
-                    fontSize: 12, fontWeight: FontWeight.w600),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: controller,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  labelText: 'Nominal bayar',
-                  hintText: 'contoh: 50000',
-                ),
-              ),
-              const SizedBox(height: 12),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: _primaryBlue,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(18),
-                    ),
-                  ),
-                  onPressed: () {
-                    Navigator.pop(context, true);
-                  },
-                  child: const Text(
-                    'Simpan Pembayaran',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                ),
-              ),
-            ],
+
+          const Text(
+            'Bayar Kasbon',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
           ),
-        );
-      },
+
+          const SizedBox(height: 8),
+
+          Text(
+            'Total: ${_money.format(total)}',
+            style: const TextStyle(fontSize: 12),
+          ),
+
+          Text(
+            'Sudah dibayar: ${_money.format(paid)}',
+            style: const TextStyle(fontSize: 12),
+          ),
+
+          // ------------------------------
+          //      SISA (warna merah)
+          // ------------------------------
+          RichText(
+            text: TextSpan(
+              text: 'Sisa: ',
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: Colors.black, // teks "Sisa:" hitam
+              ),
+              children: [
+                TextSpan(
+                  text: _money.format(remain),
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.red, // nominal merah
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // ------------------------------
+
+          const SizedBox(height: 12),
+
+          TextField(
+            controller: controller,
+            keyboardType: TextInputType.number,
+            decoration: const InputDecoration(
+              labelText: 'Nominal bayar',
+              hintText: 'Nominal yang akan dibayar',
+            ),
+          ),
+
+          const SizedBox(height: 12),
+
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: _primaryBlue,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(18),
+                ),
+              ),
+              onPressed: () {
+                Navigator.pop(context, true);
+              },
+              child: const Text(
+                'Simpan Pembayaran',
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
+  },
+);
+
 
     if (result == true) {
       final text =

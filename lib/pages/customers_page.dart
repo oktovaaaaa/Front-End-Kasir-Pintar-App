@@ -81,6 +81,28 @@ class _CustomersPageState extends State<CustomersPage> {
 
   // ============ FORM TAMBAH / EDIT ============
 
+  InputDecoration _inputDecoration(String label) {
+    return InputDecoration(
+      labelText: label,
+      labelStyle: const TextStyle(fontSize: 13, color: Colors.grey),
+      filled: true,
+      fillColor: const Color(0xFFF5F7FF),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: const BorderSide(color: Color(0xFFE0E3FF)),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: const BorderSide(color: Color(0xFFE0E3FF)),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: const BorderSide(color: _primaryBlue, width: 1.5),
+      ),
+    );
+  }
+
   Future<void> _openForm({Customer? customer}) async {
     widget.onUserActivity();
 
@@ -98,113 +120,201 @@ class _CustomersPageState extends State<CustomersPage> {
 
     final bool? result = await showDialog<bool>(
       context: context,
+      barrierDismissible: false,
       builder: (context) {
-        return AlertDialog(
+        return Dialog(
+          insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: BorderRadius.circular(22),
           ),
-          title: Text(isEdit ? 'Edit Pelanggan' : 'Tambah Pelanggan'),
-          content: SingleChildScrollView(
-            child: Form(
-              key: formKey,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TextFormField(
-                    controller: nameController,
-                    decoration:
-                        const InputDecoration(labelText: 'Nama lengkap'),
-                    validator: (v) =>
-                        v == null || v.isEmpty ? 'Nama wajib diisi' : null,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxHeight: 520),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // header
+                Container(
+                  width: double.infinity,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                  decoration: BoxDecoration(
+                    color: _primaryBlue,
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(22),
+                    ),
                   ),
-                  TextFormField(
-                    controller: phoneController,
-                    decoration:
-                        const InputDecoration(labelText: 'No. Telepon'),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        isEdit ? 'Edit Pelanggan' : 'Tambah Pelanggan',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        isEdit
+                            ? 'Perbarui data pelanggan kamu.'
+                            : 'Lengkapi data pelanggan baru.',
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
                   ),
-                  TextFormField(
-                    controller: emailController,
-                    decoration:
-                        const InputDecoration(labelText: 'Email (opsional)'),
+                ),
+
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+                    child: Form(
+                      key: formKey,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          TextFormField(
+                            controller: nameController,
+                            decoration: _inputDecoration('Nama lengkap'),
+                            validator: (v) =>
+                                v == null || v.isEmpty ? 'Nama wajib diisi' : null,
+                          ),
+                          const SizedBox(height: 12),
+                          TextFormField(
+                            controller: phoneController,
+                            keyboardType: TextInputType.phone,
+                            decoration:
+                                _inputDecoration('No. Telepon (opsional)'),
+                          ),
+                          const SizedBox(height: 12),
+                          TextFormField(
+                            controller: emailController,
+                            keyboardType: TextInputType.emailAddress,
+                            decoration:
+                                _inputDecoration('Email (opsional)'),
+                          ),
+                          const SizedBox(height: 12),
+                          TextFormField(
+                            controller: addressController,
+                            decoration:
+                                _inputDecoration('Alamat (opsional)'),
+                          ),
+                          const SizedBox(height: 12),
+                          TextFormField(
+                            controller: companyController,
+                            decoration: _inputDecoration(
+                                'Instansi/Perusahaan (opsional)'),
+                          ),
+                          const SizedBox(height: 12),
+                          TextFormField(
+                            controller: noteController,
+                            maxLines: 2,
+                            decoration:
+                                _inputDecoration('Catatan (opsional)'),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
-                  TextFormField(
-                    controller: addressController,
-                    decoration:
-                        const InputDecoration(labelText: 'Alamat (opsional)'),
+                ),
+
+                // actions
+                Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      TextButton(
+                        onPressed: () =>
+                            Navigator.pop<bool>(context, false),
+                        child: const Text(
+                          'Batal',
+                          style: TextStyle(
+                            color: Colors.grey, // ← warna abu
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: _primaryBlue,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 20, vertical: 10),
+                        ),
+                        onPressed: () async {
+                          if (!formKey.currentState!.validate()) return;
+
+                          try {
+                            if (isEdit) {
+                              await _customerService.updateCustomer(
+                                id: customer!.id,
+                                name: nameController.text.trim(),
+                                email: emailController.text.trim().isEmpty
+                                    ? null
+                                    : emailController.text.trim(),
+                                phone: phoneController.text.trim().isEmpty
+                                    ? null
+                                    : phoneController.text.trim(),
+                                address: addressController.text.trim().isEmpty
+                                    ? null
+                                    : addressController.text.trim(),
+                                company: companyController.text.trim().isEmpty
+                                    ? null
+                                    : companyController.text.trim(),
+                                note: noteController.text.trim().isEmpty
+                                    ? null
+                                    : noteController.text.trim(),
+                              );
+                            } else {
+                              await _customerService.createCustomer(
+                                name: nameController.text.trim(),
+                                email: emailController.text.trim().isEmpty
+                                    ? null
+                                    : emailController.text.trim(),
+                                phone: phoneController.text.trim().isEmpty
+                                    ? null
+                                    : phoneController.text.trim(),
+                                address: addressController.text.trim().isEmpty
+                                    ? null
+                                    : addressController.text.trim(),
+                                company: companyController.text.trim().isEmpty
+                                    ? null
+                                    : companyController.text.trim(),
+                                note: noteController.text.trim().isEmpty
+                                    ? null
+                                    : noteController.text.trim(),
+                              );
+                            }
+
+                            if (context.mounted) {
+                              Navigator.pop<bool>(context, true);
+                            }
+                          } catch (e) {
+                            _showSnack('Error: $e');
+                          }
+                        },
+                        child: Text(
+                          isEdit ? 'Simpan' : 'Tambah',
+                          style: const TextStyle(
+                            color: Colors.white, // ← teks tombol tambah putih
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                  TextFormField(
-                    controller: companyController,
-                    decoration: const InputDecoration(
-                        labelText: 'Instansi/Perusahaan (opsional)'),
-                  ),
-                  TextFormField(
-                    controller: noteController,
-                    decoration:
-                        const InputDecoration(labelText: 'Catatan (opsional)'),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop<bool>(context, false),
-              child: const Text('Batal'),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                if (!formKey.currentState!.validate()) return;
-
-                try {
-                  if (isEdit) {
-                    await _customerService.updateCustomer(
-                      id: customer!.id,
-                      name: nameController.text.trim(),
-                      email: emailController.text.trim().isEmpty
-                          ? null
-                          : emailController.text.trim(),
-                      phone: phoneController.text.trim().isEmpty
-                          ? null
-                          : phoneController.text.trim(),
-                      address: addressController.text.trim().isEmpty
-                          ? null
-                          : addressController.text.trim(),
-                      company: companyController.text.trim().isEmpty
-                          ? null
-                          : companyController.text.trim(),
-                      note: noteController.text.trim().isEmpty
-                          ? null
-                          : noteController.text.trim(),
-                    );
-                  } else {
-                    await _customerService.createCustomer(
-                      name: nameController.text.trim(),
-                      email: emailController.text.trim().isEmpty
-                          ? null
-                          : emailController.text.trim(),
-                      phone: phoneController.text.trim().isEmpty
-                          ? null
-                          : phoneController.text.trim(),
-                      address: addressController.text.trim().isEmpty
-                          ? null
-                          : addressController.text.trim(),
-                      company: companyController.text.trim().isEmpty
-                          ? null
-                          : companyController.text.trim(),
-                      note: noteController.text.trim().isEmpty
-                          ? null
-                          : noteController.text.trim(),
-                    );
-                  }
-
-                  if (context.mounted) Navigator.pop<bool>(context, true);
-                } catch (e) {
-                  _showSnack('Error: $e');
-                }
-              },
-              child: Text(isEdit ? 'Simpan' : 'Tambah'),
-            ),
-          ],
         );
       },
     );
@@ -229,7 +339,12 @@ class _CustomersPageState extends State<CustomersPage> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop<bool>(context, false),
-              child: const Text('Batal'),
+              child: const Text(
+                'Batal',
+                style: TextStyle(
+                  color: Colors.grey, // ← warna abu
+                ),
+              ),
             ),
             ElevatedButton(
               onPressed: () => Navigator.pop<bool>(context, true),
@@ -266,7 +381,6 @@ class _CustomersPageState extends State<CustomersPage> {
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 90),
           itemCount: _customers.isEmpty ? 1 : _customers.length + 1,
           itemBuilder: (context, index) {
-            // index 0 = header seperti contoh UI
             if (index == 0) {
               return _buildHeader();
             }
@@ -328,7 +442,6 @@ class _CustomersPageState extends State<CustomersPage> {
                       const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                   child: Row(
                     children: [
-                      // icon / avatar kiri
                       Container(
                         width: 40,
                         height: 40,
@@ -349,7 +462,6 @@ class _CustomersPageState extends State<CustomersPage> {
                       ),
                       const SizedBox(width: 12),
 
-                      // teks tengah
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -370,7 +482,18 @@ class _CustomersPageState extends State<CustomersPage> {
                                   color: Colors.grey,
                                 ),
                               ),
-                            if (c.note != null && c.note!.trim().isNotEmpty)
+                            if (c.company != null &&
+                                c.company!.trim().isNotEmpty)
+                              Text(
+                                c.company!,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontSize: 11,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                            if ((c.note ?? '').trim().isNotEmpty)
                               Text(
                                 c.note!,
                                 maxLines: 1,
@@ -386,7 +509,6 @@ class _CustomersPageState extends State<CustomersPage> {
 
                       const SizedBox(width: 8),
 
-                      // amount / status kanan
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.end,
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -436,37 +558,25 @@ class _CustomersPageState extends State<CustomersPage> {
           },
         ),
       ),
+
       floatingActionButton: FloatingActionButton(
         backgroundColor: _primaryBlue,
         onPressed: () => _openForm(),
-        child: const Icon(Icons.add),
+        child: const Icon(
+          Icons.add,
+          color: Colors.white, // ← icon + warna putih
+        ),
       ),
     );
   }
 
-  // Header ala “card + summary” seperti gambar
+  // Header card
   Widget _buildHeader() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Pelanggan',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-        const SizedBox(height: 4),
-        const Text(
-          'Kelola data pelanggan dan utang mereka.',
-          style: TextStyle(
-            fontSize: 12,
-            color: Colors.grey,
-          ),
-        ),
         const SizedBox(height: 12),
 
-        // kartu ringkasan
         Container(
           width: double.infinity,
           padding: const EdgeInsets.all(16),

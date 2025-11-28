@@ -161,7 +161,7 @@ class _ProductsPageState extends State<ProductsPage> {
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Icon(
+                                  const Icon(
                                     Icons.category_outlined,
                                     size: 14,
                                     color: _primaryBlue,
@@ -277,7 +277,45 @@ class _ProductsPageState extends State<ProductsPage> {
     );
   }
 
-  /// ====== BOTTOM SHEET FORM PRODUK ======
+  InputDecoration _blueInput(String label, IconData icon) {
+    return InputDecoration(
+      labelText: label,
+      prefixIcon: Icon(icon, color: _primaryBlue),
+      filled: true,
+      fillColor: const Color(0xFFF8FBFF),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: BorderSide(color: _primaryBlue.withOpacity(0.25)),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: const BorderSide(color: _primaryBlue, width: 1.5),
+      ),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+    );
+  }
+
+  ButtonStyle get _blueBtn =>
+      ElevatedButton.styleFrom(
+        backgroundColor: _primaryBlue,
+        foregroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+        elevation: 0,
+      );
+
+  TextButton _ghostBtn(String text, VoidCallback onPressed) => TextButton(
+        onPressed: onPressed,
+        style: TextButton.styleFrom(
+          foregroundColor: _primaryBlue,
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        ),
+        child: Text(text, style: const TextStyle(fontWeight: FontWeight.w600)),
+      );
+
+  /// ====== BOTTOM SHEET FORM PRODUK (CANTIK & BIRU) ======
   Future<void> _openProductForm({Product? product}) async {
     widget.onUserActivity();
 
@@ -322,16 +360,16 @@ class _ProductsPageState extends State<ProductsPage> {
                     TextFormField(
                       controller: catNameController,
                       decoration:
-                          const InputDecoration(labelText: 'Nama kategori'),
+                          _blueInput('Nama kategori', Icons.category_rounded),
                       validator: (v) => v == null || v.isEmpty
                           ? 'Nama kategori wajib diisi'
                           : null,
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 10),
                     TextFormField(
                       controller: catDescController,
-                      decoration: const InputDecoration(
-                          labelText: 'Deskripsi (opsional)'),
+                      decoration:
+                          _blueInput('Deskripsi (opsional)', Icons.notes),
                       maxLines: 2,
                     ),
                   ],
@@ -339,11 +377,9 @@ class _ProductsPageState extends State<ProductsPage> {
               ),
             ),
             actions: [
-              TextButton(
-                onPressed: () => Navigator.pop<Category?>(context, null),
-                child: const Text('Batal'),
-              ),
+              _ghostBtn('Batal', () => Navigator.pop<Category?>(context, null)),
               ElevatedButton(
+                style: _blueBtn,
                 onPressed: () async {
                   if (!catFormKey.currentState!.validate()) return;
 
@@ -383,8 +419,9 @@ class _ProductsPageState extends State<ProductsPage> {
     final result = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
+      backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
       builder: (context) {
         return StatefulBuilder(
@@ -409,19 +446,35 @@ class _ProductsPageState extends State<ProductsPage> {
                           height: 4,
                           margin: const EdgeInsets.only(bottom: 12),
                           decoration: BoxDecoration(
-                            color: Colors.grey[400],
+                            color: Colors.grey[300],
                             borderRadius: BorderRadius.circular(999),
                           ),
                         ),
                       ),
-                      Center(
-                        child: Text(
-                          isEdit ? 'Edit Produk' : 'Tambah Produk',
-                          style: const TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: _primaryBlue.withOpacity(0.12),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.inventory_2_outlined,
+                              color: _primaryBlue,
+                            ),
                           ),
-                        ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              isEdit ? 'Edit Produk' : 'Tambah Produk',
+                              style: const TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 16),
 
@@ -440,29 +493,36 @@ class _ProductsPageState extends State<ProductsPage> {
                           },
                           child: Column(
                             children: [
-                              ClipRRect(
-                                borderRadius: BorderRadius.circular(12),
-                                child: SizedBox(
-                                  width: 120,
-                                  height: 120,
-                                  child: pickedImage != null
-                                      ? Image.file(
-                                          pickedImage!,
-                                          fit: BoxFit.cover,
-                                        )
-                                      : (product?.imageUrl != null
-                                          ? Image.network(
-                                              product!.imageUrl!,
-                                              fit: BoxFit.cover,
-                                            )
-                                          : Container(
-                                              color: Colors.grey[300],
-                                              child: const Icon(
-                                                Icons.camera_alt,
-                                                size: 40,
-                                                color: Colors.grey,
-                                              ),
-                                            )),
+                              Container(
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(16),
+                                  border: Border.all(
+                                      color: _primaryBlue.withOpacity(0.3)),
+                                ),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(16),
+                                  child: SizedBox(
+                                    width: 140,
+                                    height: 140,
+                                    child: pickedImage != null
+                                        ? Image.file(
+                                            pickedImage!,
+                                            fit: BoxFit.cover,
+                                          )
+                                        : (product?.imageUrl != null
+                                            ? Image.network(
+                                                product!.imageUrl!,
+                                                fit: BoxFit.cover,
+                                              )
+                                            : Container(
+                                                color: const Color(0xFFEFF6FF),
+                                                child: const Icon(
+                                                  Icons.camera_alt,
+                                                  size: 42,
+                                                  color: _primaryBlue,
+                                                ),
+                                              )),
+                                  ),
                                 ),
                               ),
                               const SizedBox(height: 8),
@@ -482,9 +542,8 @@ class _ProductsPageState extends State<ProductsPage> {
 
                       TextFormField(
                         controller: nameController,
-                        decoration: const InputDecoration(
-                          labelText: 'Nama Produk',
-                        ),
+                        decoration:
+                            _blueInput('Nama Produk', Icons.text_fields_rounded),
                         validator: (v) =>
                             v == null || v.isEmpty ? 'Nama wajib diisi' : null,
                       ),
@@ -493,8 +552,7 @@ class _ProductsPageState extends State<ProductsPage> {
 
                       DropdownButtonFormField<int>(
                         value: selectedCategoryId,
-                        decoration:
-                            const InputDecoration(labelText: 'Kategori'),
+                        decoration: _blueInput('Kategori', Icons.category),
                         items: [
                           ..._categories.map(
                             (c) => DropdownMenuItem<int>(
@@ -529,9 +587,8 @@ class _ProductsPageState extends State<ProductsPage> {
                       TextFormField(
                         controller: costPriceController,
                         keyboardType: TextInputType.number,
-                        decoration: const InputDecoration(
-                          labelText: 'Harga Modal (contoh: 10000)',
-                        ),
+                        decoration:
+                            _blueInput('Harga Modal (contoh: 10000)', Icons.payments_rounded),
                         validator: (v) {
                           if (v == null || v.isEmpty) {
                             return 'Harga modal wajib diisi';
@@ -548,9 +605,8 @@ class _ProductsPageState extends State<ProductsPage> {
                       TextFormField(
                         controller: priceController,
                         keyboardType: TextInputType.number,
-                        decoration: const InputDecoration(
-                          labelText: 'Harga Jual (contoh: 12500)',
-                        ),
+                        decoration:
+                            _blueInput('Harga Jual (contoh: 12500)', Icons.sell_rounded),
                         validator: (v) {
                           if (v == null || v.isEmpty) {
                             return 'Harga jual wajib diisi';
@@ -570,9 +626,8 @@ class _ProductsPageState extends State<ProductsPage> {
                       TextFormField(
                         controller: stockController,
                         keyboardType: TextInputType.number,
-                        decoration: const InputDecoration(
-                          labelText: 'Stok',
-                        ),
+                        decoration:
+                            _blueInput('Stok', Icons.inventory_rounded),
                         validator: (v) {
                           if (v == null || v.isEmpty) {
                             return 'Stok wajib diisi';
@@ -588,9 +643,8 @@ class _ProductsPageState extends State<ProductsPage> {
 
                       TextFormField(
                         controller: descController,
-                        decoration: const InputDecoration(
-                          labelText: 'Keterangan (opsional)',
-                        ),
+                        decoration:
+                            _blueInput('Keterangan (opsional)', Icons.notes_rounded),
                         maxLines: 2,
                       ),
 
@@ -599,11 +653,9 @@ class _ProductsPageState extends State<ProductsPage> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          TextButton(
-                            onPressed: () => Navigator.pop(context, false),
-                            child: const Text('Batal'),
-                          ),
+                          _ghostBtn('Batal', () => Navigator.pop(context, false)),
                           ElevatedButton(
+                            style: _blueBtn,
                             onPressed: () async {
                               if (!formKey.currentState!.validate()) return;
 
@@ -687,11 +739,9 @@ class _ProductsPageState extends State<ProductsPage> {
           title: const Text('Hapus Produk'),
           content: Text('Yakin menghapus "${product.name}" ?'),
           actions: [
-            TextButton(
-              onPressed: () => Navigator.pop<bool>(context, false),
-              child: const Text('Batal'),
-            ),
+            _ghostBtn('Batal', () => Navigator.pop<bool>(context, false)),
             ElevatedButton(
+              style: _blueBtn,
               onPressed: () => Navigator.pop<bool>(context, true),
               child: const Text('Hapus'),
             ),
@@ -723,7 +773,7 @@ class _ProductsPageState extends State<ProductsPage> {
       floatingActionButton: FloatingActionButton(
         onPressed: () => _openProductForm(),
         backgroundColor: _primaryBlue,
-        child: const Icon(Icons.add),
+        child: const Icon(Icons.add, color: Colors.white), // "+" PUTIH
       ),
     );
   }
@@ -767,45 +817,6 @@ class _ProductsPageState extends State<ProductsPage> {
       ],
     );
   }
-
-  // Widget _buildHeader() {
-  //   return Row(
-  //     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-  //     children: [
-  //       const Column(
-  //         crossAxisAlignment: CrossAxisAlignment.start,
-  //         children: [
-  //           Text(
-  //             'Produk & Stok',
-  //             style: TextStyle(
-  //               fontSize: 20,
-  //               fontWeight: FontWeight.bold,
-  //             ),
-  //           ),
-  //           SizedBox(height: 4),
-  //           Text(
-  //             'Kelola produk yang dijual di toko',
-  //             style: TextStyle(
-  //               fontSize: 12,
-  //               color: Colors.grey,
-  //             ),
-  //           ),
-  //         ],
-  //       ),
-  //       Container(
-  //         padding: const EdgeInsets.all(8),
-  //         decoration: BoxDecoration(
-  //           color: _primaryBlue.withOpacity(0.1),
-  //           shape: BoxShape.circle,
-  //         ),
-  //         child: Icon(
-  //           Icons.inventory_2_outlined,
-  //           color: _primaryBlue,
-  //         ),
-  //       )
-  //     ],
-  //   );
-  // }
 
   Widget _buildSearchAndFilter() {
     return Column(
