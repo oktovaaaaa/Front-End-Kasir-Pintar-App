@@ -21,8 +21,11 @@ class ProductsPage extends StatefulWidget {
 class _ProductsPageState extends State<ProductsPage> {
   final ProductService _productService = ProductService();
   final CategoryService _categoryService = CategoryService();
-  final NumberFormat _priceFormatter =
-      NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
+  final NumberFormat _priceFormatter = NumberFormat.currency(
+    locale: 'id_ID',
+    symbol: 'Rp ',
+    decimalDigits: 0,
+  );
 
   static const Color _primaryBlue = Color(0xFF57A0D3);
 
@@ -34,6 +37,10 @@ class _ProductsPageState extends State<ProductsPage> {
   String _searchText = '';
   int? _selectedCategoryId;
   List<Product> _filteredProducts = [];
+
+  // theme cache biar bisa dipakai di helper
+  late ThemeData _theme;
+  late bool _isDark;
 
   @override
   void initState() {
@@ -67,7 +74,7 @@ class _ProductsPageState extends State<ProductsPage> {
         final matchSearch = query.isEmpty
             ? true
             : p.name.toLowerCase().contains(query) ||
-                (p.categoryName?.toLowerCase().contains(query) ?? false);
+                  (p.categoryName?.toLowerCase().contains(query) ?? false);
         final matchCategory = _selectedCategoryId == null
             ? true
             : p.categoryId == _selectedCategoryId;
@@ -77,9 +84,9 @@ class _ProductsPageState extends State<ProductsPage> {
   }
 
   void _showSnack(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   /// ====== BOTTOM SHEET DETAIL PRODUK ======
@@ -89,10 +96,13 @@ class _ProductsPageState extends State<ProductsPage> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      backgroundColor: _theme.colorScheme.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (context) {
+        final sheetTheme = Theme.of(context);
+
         return Padding(
           padding: EdgeInsets.only(
             left: 16,
@@ -109,7 +119,7 @@ class _ProductsPageState extends State<ProductsPage> {
                   height: 4,
                   margin: const EdgeInsets.only(bottom: 16),
                   decoration: BoxDecoration(
-                    color: Colors.grey[400],
+                    color: sheetTheme.dividerColor.withOpacity(0.4),
                     borderRadius: BorderRadius.circular(999),
                   ),
                 ),
@@ -126,11 +136,15 @@ class _ProductsPageState extends State<ProductsPage> {
                                 fit: BoxFit.cover,
                               )
                             : Container(
-                                color: Colors.grey[200],
-                                child: const Icon(
+                                color: _isDark
+                                    ? Colors.grey[800]
+                                    : Colors.grey[200],
+                                child: Icon(
                                   Icons.image_outlined,
                                   size: 32,
-                                  color: Colors.grey,
+                                  color: _isDark
+                                      ? Colors.grey[300]
+                                      : Colors.grey,
                                 ),
                               ),
                       ),
@@ -142,7 +156,7 @@ class _ProductsPageState extends State<ProductsPage> {
                         children: [
                           Text(
                             product.name,
-                            style: const TextStyle(
+                            style: sheetTheme.textTheme.titleMedium?.copyWith(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
                             ),
@@ -155,7 +169,7 @@ class _ProductsPageState extends State<ProductsPage> {
                                 vertical: 4,
                               ),
                               decoration: BoxDecoration(
-                                color: _primaryBlue.withOpacity(0.06),
+                                color: _primaryBlue.withOpacity(0.10),
                                 borderRadius: BorderRadius.circular(20),
                               ),
                               child: Row(
@@ -169,11 +183,12 @@ class _ProductsPageState extends State<ProductsPage> {
                                   const SizedBox(width: 4),
                                   Text(
                                     product.categoryName!,
-                                    style: const TextStyle(
-                                      fontSize: 12,
-                                      color: _primaryBlue,
-                                      fontWeight: FontWeight.w600,
-                                    ),
+                                    style: sheetTheme.textTheme.labelSmall
+                                        ?.copyWith(
+                                          fontSize: 12,
+                                          color: _primaryBlue,
+                                          fontWeight: FontWeight.w600,
+                                        ),
                                   ),
                                 ],
                               ),
@@ -188,30 +203,29 @@ class _ProductsPageState extends State<ProductsPage> {
                   icon: Icons.sell_outlined,
                   label: 'Harga Jual',
                   value: _priceFormatter.format(product.price),
-                  valueColor: Colors.blue[700],
+                  valueColor: Colors.blue[400],
                 ),
                 const SizedBox(height: 10),
                 _detailRow(
                   icon: Icons.shopping_bag_outlined,
                   label: 'Harga Modal',
                   value: _priceFormatter.format(product.costPrice),
-                  valueColor: Colors.grey[800],
+                  valueColor: _theme.colorScheme.onSurface.withOpacity(0.8),
                 ),
                 const SizedBox(height: 10),
                 _detailRow(
                   icon: Icons.inventory_2_outlined,
                   label: 'Stok',
                   value: '${product.stock} pcs',
-                  valueColor: Colors.orange[700],
+                  valueColor: Colors.orange[400],
                 ),
                 const SizedBox(height: 16),
                 Align(
                   alignment: Alignment.centerLeft,
                   child: Text(
                     'Keterangan',
-                    style: TextStyle(
+                    style: sheetTheme.textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.w600,
-                      color: Colors.grey[800],
                     ),
                   ),
                 ),
@@ -223,7 +237,9 @@ class _ProductsPageState extends State<ProductsPage> {
                             product.description!.trim().isEmpty)
                         ? 'Tidak ada keterangan.'
                         : product.description!,
-                    style: const TextStyle(fontSize: 13),
+                    style: sheetTheme.textTheme.bodySmall?.copyWith(
+                      fontSize: 13,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -246,11 +262,11 @@ class _ProductsPageState extends State<ProductsPage> {
         Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: _primaryBlue.withOpacity(0.08),
+            color: _primaryBlue.withOpacity(0.12),
             shape: BoxShape.circle,
           ),
-          child: Icon(
-            icon,
+          child: const Icon(
+            Icons.info_outline_rounded,
             size: 18,
             color: _primaryBlue,
           ),
@@ -259,18 +275,18 @@ class _ProductsPageState extends State<ProductsPage> {
         Expanded(
           child: Text(
             label,
-            style: const TextStyle(
+            style: _theme.textTheme.bodySmall?.copyWith(
               fontSize: 13,
-              color: Colors.grey,
+              color: _theme.colorScheme.onSurface.withOpacity(0.6),
             ),
           ),
         ),
         Text(
           value,
-          style: TextStyle(
+          style: _theme.textTheme.bodyMedium?.copyWith(
             fontSize: 14,
             fontWeight: FontWeight.w600,
-            color: valueColor ?? Colors.black87,
+            color: valueColor ?? _theme.colorScheme.onSurface,
           ),
         ),
       ],
@@ -282,10 +298,14 @@ class _ProductsPageState extends State<ProductsPage> {
       labelText: label,
       prefixIcon: Icon(icon, color: _primaryBlue),
       filled: true,
-      fillColor: const Color(0xFFF8FBFF),
+      fillColor: _isDark ? _theme.colorScheme.surface : const Color(0xFFF8FBFF),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
-        borderSide: BorderSide(color: _primaryBlue.withOpacity(0.25)),
+        borderSide: BorderSide(
+          color: _isDark
+              ? _theme.colorScheme.primary.withOpacity(0.5)
+              : _primaryBlue.withOpacity(0.25),
+        ),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
@@ -295,25 +315,23 @@ class _ProductsPageState extends State<ProductsPage> {
     );
   }
 
-  ButtonStyle get _blueBtn =>
-      ElevatedButton.styleFrom(
-        backgroundColor: _primaryBlue,
-        foregroundColor: Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-        elevation: 0,
-      );
+  ButtonStyle get _blueBtn => ElevatedButton.styleFrom(
+    backgroundColor: _primaryBlue,
+    foregroundColor: Colors.white,
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+    padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+    elevation: 0,
+  );
 
   TextButton _ghostBtn(String text, VoidCallback onPressed) => TextButton(
-        onPressed: onPressed,
-        style: TextButton.styleFrom(
-          foregroundColor: _primaryBlue,
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-        ),
-        child: Text(text, style: const TextStyle(fontWeight: FontWeight.w600)),
-      );
+    onPressed: onPressed,
+    style: TextButton.styleFrom(
+      foregroundColor: _primaryBlue,
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+    ),
+    child: Text(text, style: const TextStyle(fontWeight: FontWeight.w600)),
+  );
 
   /// ====== BOTTOM SHEET FORM PRODUK (CANTIK & BIRU) ======
   Future<void> _openProductForm({Product? product}) async {
@@ -323,13 +341,17 @@ class _ProductsPageState extends State<ProductsPage> {
 
     final nameController = TextEditingController(text: product?.name ?? '');
     final costPriceController = TextEditingController(
-        text: product != null ? product.costPrice.toString() : '');
+      text: product != null ? product.costPrice.toString() : '',
+    );
     final priceController = TextEditingController(
-        text: product != null ? product.price.toString() : '');
+      text: product != null ? product.price.toString() : '',
+    );
     final stockController = TextEditingController(
-        text: product != null ? product.stock.toString() : '');
-    final descController =
-        TextEditingController(text: product?.description ?? '');
+      text: product != null ? product.stock.toString() : '',
+    );
+    final descController = TextEditingController(
+      text: product?.description ?? '',
+    );
 
     int? selectedCategoryId = product?.categoryId;
     File? pickedImage;
@@ -346,11 +368,16 @@ class _ProductsPageState extends State<ProductsPage> {
       final Category? newCategory = await showDialog<Category?>(
         context: context,
         builder: (context) {
+          final dialogTheme = Theme.of(context);
           return AlertDialog(
+            backgroundColor: dialogTheme.colorScheme.surface,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(18),
             ),
-            title: const Text('Tambah Kategori'),
+            title: Text(
+              'Tambah Kategori',
+              style: dialogTheme.textTheme.titleMedium,
+            ),
             content: SingleChildScrollView(
               child: Form(
                 key: catFormKey,
@@ -359,8 +386,10 @@ class _ProductsPageState extends State<ProductsPage> {
                   children: [
                     TextFormField(
                       controller: catNameController,
-                      decoration:
-                          _blueInput('Nama kategori', Icons.category_rounded),
+                      decoration: _blueInput(
+                        'Nama kategori',
+                        Icons.category_rounded,
+                      ),
                       validator: (v) => v == null || v.isEmpty
                           ? 'Nama kategori wajib diisi'
                           : null,
@@ -368,8 +397,10 @@ class _ProductsPageState extends State<ProductsPage> {
                     const SizedBox(height: 10),
                     TextFormField(
                       controller: catDescController,
-                      decoration:
-                          _blueInput('Deskripsi (opsional)', Icons.notes),
+                      decoration: _blueInput(
+                        'Deskripsi (opsional)',
+                        Icons.notes,
+                      ),
                       maxLines: 2,
                     ),
                   ],
@@ -419,11 +450,12 @@ class _ProductsPageState extends State<ProductsPage> {
     final result = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.white,
+      backgroundColor: _theme.colorScheme.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
       builder: (context) {
+        final sheetTheme = Theme.of(context);
         return StatefulBuilder(
           builder: (context, setStateSheet) {
             return Padding(
@@ -446,7 +478,7 @@ class _ProductsPageState extends State<ProductsPage> {
                           height: 4,
                           margin: const EdgeInsets.only(bottom: 12),
                           decoration: BoxDecoration(
-                            color: Colors.grey[300],
+                            color: sheetTheme.dividerColor.withOpacity(0.4),
                             borderRadius: BorderRadius.circular(999),
                           ),
                         ),
@@ -468,7 +500,7 @@ class _ProductsPageState extends State<ProductsPage> {
                           Expanded(
                             child: Text(
                               isEdit ? 'Edit Produk' : 'Tambah Produk',
-                              style: const TextStyle(
+                              style: sheetTheme.textTheme.titleMedium?.copyWith(
                                 fontSize: 20,
                                 fontWeight: FontWeight.w800,
                               ),
@@ -497,7 +529,8 @@ class _ProductsPageState extends State<ProductsPage> {
                                 decoration: BoxDecoration(
                                   borderRadius: BorderRadius.circular(16),
                                   border: Border.all(
-                                      color: _primaryBlue.withOpacity(0.3)),
+                                    color: _primaryBlue.withOpacity(0.3),
+                                  ),
                                 ),
                                 child: ClipRRect(
                                   borderRadius: BorderRadius.circular(16),
@@ -510,27 +543,30 @@ class _ProductsPageState extends State<ProductsPage> {
                                             fit: BoxFit.cover,
                                           )
                                         : (product?.imageUrl != null
-                                            ? Image.network(
-                                                product!.imageUrl!,
-                                                fit: BoxFit.cover,
-                                              )
-                                            : Container(
-                                                color: const Color(0xFFEFF6FF),
-                                                child: const Icon(
-                                                  Icons.camera_alt,
-                                                  size: 42,
-                                                  color: _primaryBlue,
-                                                ),
-                                              )),
+                                              ? Image.network(
+                                                  product!.imageUrl!,
+                                                  fit: BoxFit.cover,
+                                                )
+                                              : Container(
+                                                  color: const Color(
+                                                    0xFFEFF6FF,
+                                                  ),
+                                                  child: const Icon(
+                                                    Icons.camera_alt,
+                                                    size: 42,
+                                                    color: _primaryBlue,
+                                                  ),
+                                                )),
                                   ),
                                 ),
                               ),
                               const SizedBox(height: 8),
                               Text(
                                 'Tap untuk pilih foto',
-                                style: TextStyle(
+                                style: sheetTheme.textTheme.bodySmall?.copyWith(
                                   fontSize: 12,
-                                  color: Colors.grey[600],
+                                  color: sheetTheme.colorScheme.onSurface
+                                      .withOpacity(0.7),
                                 ),
                               ),
                             ],
@@ -542,8 +578,10 @@ class _ProductsPageState extends State<ProductsPage> {
 
                       TextFormField(
                         controller: nameController,
-                        decoration:
-                            _blueInput('Nama Produk', Icons.text_fields_rounded),
+                        decoration: _blueInput(
+                          'Nama Produk',
+                          Icons.text_fields_rounded,
+                        ),
                         validator: (v) =>
                             v == null || v.isEmpty ? 'Nama wajib diisi' : null,
                       ),
@@ -553,6 +591,7 @@ class _ProductsPageState extends State<ProductsPage> {
                       DropdownButtonFormField<int>(
                         value: selectedCategoryId,
                         decoration: _blueInput('Kategori', Icons.category),
+                        dropdownColor: _theme.colorScheme.surface,
                         items: [
                           ..._categories.map(
                             (c) => DropdownMenuItem<int>(
@@ -587,8 +626,10 @@ class _ProductsPageState extends State<ProductsPage> {
                       TextFormField(
                         controller: costPriceController,
                         keyboardType: TextInputType.number,
-                        decoration:
-                            _blueInput('Harga Modal (contoh: 10000)', Icons.payments_rounded),
+                        decoration: _blueInput(
+                          'Harga Modal (contoh: 10000)',
+                          Icons.payments_rounded,
+                        ),
                         validator: (v) {
                           if (v == null || v.isEmpty) {
                             return 'Harga modal wajib diisi';
@@ -605,8 +646,10 @@ class _ProductsPageState extends State<ProductsPage> {
                       TextFormField(
                         controller: priceController,
                         keyboardType: TextInputType.number,
-                        decoration:
-                            _blueInput('Harga Jual (contoh: 12500)', Icons.sell_rounded),
+                        decoration: _blueInput(
+                          'Harga Jual (contoh: 12500)',
+                          Icons.sell_rounded,
+                        ),
                         validator: (v) {
                           if (v == null || v.isEmpty) {
                             return 'Harga jual wajib diisi';
@@ -626,8 +669,7 @@ class _ProductsPageState extends State<ProductsPage> {
                       TextFormField(
                         controller: stockController,
                         keyboardType: TextInputType.number,
-                        decoration:
-                            _blueInput('Stok', Icons.inventory_rounded),
+                        decoration: _blueInput('Stok', Icons.inventory_rounded),
                         validator: (v) {
                           if (v == null || v.isEmpty) {
                             return 'Stok wajib diisi';
@@ -643,8 +685,10 @@ class _ProductsPageState extends State<ProductsPage> {
 
                       TextFormField(
                         controller: descController,
-                        decoration:
-                            _blueInput('Keterangan (opsional)', Icons.notes_rounded),
+                        decoration: _blueInput(
+                          'Keterangan (opsional)',
+                          Icons.notes_rounded,
+                        ),
                         maxLines: 2,
                       ),
 
@@ -653,19 +697,25 @@ class _ProductsPageState extends State<ProductsPage> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          _ghostBtn('Batal', () => Navigator.pop(context, false)),
+                          _ghostBtn(
+                            'Batal',
+                            () => Navigator.pop(context, false),
+                          ),
                           ElevatedButton(
                             style: _blueBtn,
                             onPressed: () async {
                               if (!formKey.currentState!.validate()) return;
 
                               final name = nameController.text.trim();
-                              final costPrice =
-                                  int.parse(costPriceController.text.trim());
-                              final price =
-                                  int.parse(priceController.text.trim());
-                              final stock =
-                                  int.parse(stockController.text.trim());
+                              final costPrice = int.parse(
+                                costPriceController.text.trim(),
+                              );
+                              final price = int.parse(
+                                priceController.text.trim(),
+                              );
+                              final stock = int.parse(
+                                stockController.text.trim(),
+                              );
                               final desc = descController.text.trim();
 
                               try {
@@ -677,8 +727,7 @@ class _ProductsPageState extends State<ProductsPage> {
                                     costPrice: costPrice,
                                     stock: stock,
                                     categoryId: selectedCategoryId,
-                                    description:
-                                        desc.isEmpty ? null : desc,
+                                    description: desc.isEmpty ? null : desc,
                                     imageFile: pickedImage,
                                   );
                                 } else {
@@ -688,8 +737,7 @@ class _ProductsPageState extends State<ProductsPage> {
                                     costPrice: costPrice,
                                     stock: stock,
                                     categoryId: selectedCategoryId,
-                                    description:
-                                        desc.isEmpty ? null : desc,
+                                    description: desc.isEmpty ? null : desc,
                                     imageFile: pickedImage,
                                   );
                                 }
@@ -700,8 +748,7 @@ class _ProductsPageState extends State<ProductsPage> {
                               } catch (e) {
                                 if (context.mounted) {
                                   ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                        content: Text('Error: $e')),
+                                    SnackBar(content: Text('Error: $e')),
                                   );
                                 }
                               }
@@ -732,7 +779,9 @@ class _ProductsPageState extends State<ProductsPage> {
     final ok = await showDialog<bool>(
       context: context,
       builder: (context) {
+        final dialogTheme = Theme.of(context);
         return AlertDialog(
+          backgroundColor: dialogTheme.colorScheme.surface,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(18),
           ),
@@ -762,8 +811,11 @@ class _ProductsPageState extends State<ProductsPage> {
 
   @override
   Widget build(BuildContext context) {
+    _theme = Theme.of(context);
+    _isDark = _theme.brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF6F8FF),
+      backgroundColor: _theme.scaffoldBackgroundColor,
       body: RefreshIndicator(
         onRefresh: _loadInitialData,
         child: _isLoading
@@ -795,7 +847,6 @@ class _ProductsPageState extends State<ProductsPage> {
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 80),
       children: [
         const SizedBox(height: 4),
-        // _buildHeader(),
         const SizedBox(height: 16),
         _buildSearchAndFilter(),
         const SizedBox(height: 16),
@@ -824,22 +875,27 @@ class _ProductsPageState extends State<ProductsPage> {
         // Search
         Container(
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: _theme.cardColor,
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
-              ),
+              if (!_isDark)
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
             ],
           ),
           child: TextField(
-            decoration: const InputDecoration(
+            style: _theme.textTheme.bodyMedium,
+            decoration: InputDecoration(
               hintText: 'Cari produk atau kategori...',
+              hintStyle: _theme.textTheme.bodyMedium?.copyWith(
+                color: _theme.hintColor,
+              ),
               border: InputBorder.none,
-              prefixIcon: Icon(Icons.search),
-              contentPadding: EdgeInsets.symmetric(
+              prefixIcon: Icon(Icons.search, color: _theme.iconTheme.color),
+              contentPadding: const EdgeInsets.symmetric(
                 horizontal: 16,
                 vertical: 12,
               ),
@@ -852,33 +908,33 @@ class _ProductsPageState extends State<ProductsPage> {
           ),
         ),
         const SizedBox(height: 10),
-        // Filter kategori
+
         Align(
           alignment: Alignment.centerLeft,
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: _theme.cardColor,
               borderRadius: BorderRadius.circular(24),
               boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.04),
-                  blurRadius: 8,
-                  offset: const Offset(0, 3),
-                ),
+                if (!_isDark)
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.04),
+                    blurRadius: 8,
+                    offset: const Offset(0, 3),
+                  ),
               ],
             ),
             child: DropdownButtonHideUnderline(
               child: DropdownButton<int?>(
                 value: _selectedCategoryId,
-                icon: const Icon(
+                icon: Icon(
                   Icons.keyboard_arrow_down_rounded,
                   size: 18,
+                  color: _theme.iconTheme.color,
                 ),
-                style: const TextStyle(
-                  fontSize: 13,
-                  color: Colors.black,
-                ),
+                dropdownColor: _theme.colorScheme.surface,
+                style: _theme.textTheme.bodySmall?.copyWith(fontSize: 13),
                 onChanged: (value) {
                   widget.onUserActivity();
                   setState(() {
@@ -911,14 +967,15 @@ class _ProductsPageState extends State<ProductsPage> {
       onTap: () => _openProductDetail(p),
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: _theme.cardColor,
           borderRadius: BorderRadius.circular(24),
           boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.06),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
+            if (!_isDark)
+              BoxShadow(
+                color: Colors.black.withOpacity(0.06),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
           ],
         ),
         padding: const EdgeInsets.all(10),
@@ -948,9 +1005,10 @@ class _ProductsPageState extends State<ProductsPage> {
                     IconButton(
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(),
-                      icon: const Icon(
+                      icon: Icon(
                         Icons.edit,
                         size: 20,
+                        color: _theme.iconTheme.color,
                       ),
                       onPressed: () => _openProductForm(product: p),
                     ),
@@ -974,7 +1032,7 @@ class _ProductsPageState extends State<ProductsPage> {
               p.name,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
+              style: _theme.textTheme.bodyMedium?.copyWith(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
               ),
@@ -983,9 +1041,9 @@ class _ProductsPageState extends State<ProductsPage> {
             if (p.categoryName != null)
               Text(
                 p.categoryName!,
-                style: TextStyle(
+                style: _theme.textTheme.bodySmall?.copyWith(
                   fontSize: 11,
-                  color: Colors.grey[600],
+                  color: _theme.colorScheme.onSurface.withOpacity(0.7),
                 ),
               ),
             const Spacer(),
@@ -1003,16 +1061,18 @@ class _ProductsPageState extends State<ProductsPage> {
               children: [
                 Text(
                   'Modal: ${_priceFormatter.format(p.costPrice)}',
-                  style: const TextStyle(
+                  style: _theme.textTheme.bodySmall?.copyWith(
                     fontSize: 11,
-                    color: Colors.grey,
+                    color: _theme.colorScheme.onSurface.withOpacity(0.7),
                   ),
                 ),
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 3,
+                  ),
                   decoration: BoxDecoration(
-                    color: Colors.orange.withOpacity(0.09),
+                    color: Colors.orange.withOpacity(_isDark ? 0.16 : 0.09),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(

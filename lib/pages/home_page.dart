@@ -1,19 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
+
 import 'sales_page.dart';
 import 'products_page.dart';
 import 'sales_history_page.dart';
 import 'reports_page.dart';
 import 'customers_page.dart';
+import 'edit_profile_page.dart';
 
 class HomePage extends StatefulWidget {
   final VoidCallback onUserActivity;
   final VoidCallback onForceLogout;
 
+  // untuk kontrol theme dari root
+  final ValueChanged<bool>? onThemeChanged;
+  final bool isDarkMode;
+
   const HomePage({
     super.key,
     required this.onUserActivity,
     required this.onForceLogout,
+    this.onThemeChanged,
+    this.isDarkMode = false,
   });
 
   @override
@@ -25,41 +33,59 @@ class _HomePageState extends State<HomePage> {
 
   static const Color _primaryBlue = Color(0xFF57A0D3);
 
+  bool _localDark = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _localDark = widget.isDarkMode;
+  }
+
   void _handleUserActivity() {
     widget.onUserActivity();
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    // warna background bottom bar ikut tema
+    final Color bottomBarColor =
+        isDark ? theme.colorScheme.surface.withOpacity(0.98) : _primaryBlue;
+
     return GestureDetector(
       onTap: _handleUserActivity,
       onPanDown: (_) => _handleUserActivity(),
       child: Scaffold(
-        backgroundColor: const Color(0xFFF6F8FF),
+        backgroundColor: theme.scaffoldBackgroundColor,
         appBar: AppBar(
           elevation: 0,
           backgroundColor: Colors.transparent,
           title: Text(
             _getTitleForIndex(_bottomIndex),
-            style: const TextStyle(
-              color: Colors.black,
+            style: theme.textTheme.titleLarge?.copyWith(
               fontSize: 22,
               fontWeight: FontWeight.bold,
+              color: theme.colorScheme.onSurface,
             ),
           ),
           actions: [
             IconButton(
               onPressed: _openSettingSheet,
-              icon: const Icon(Icons.settings, color: Colors.black),
+              icon: Icon(
+                Icons.settings,
+                color: theme.iconTheme.color ?? theme.colorScheme.onSurface,
+              ),
             )
           ],
         ),
         body: _buildBody(),
         bottomNavigationBar: Container(
           padding: const EdgeInsets.symmetric(vertical: 8),
-          decoration: const BoxDecoration(
-            color: _primaryBlue,
-            borderRadius: BorderRadius.only(
+          decoration: BoxDecoration(
+            color: bottomBarColor,
+            borderRadius: const BorderRadius.only(
               topLeft: Radius.circular(24),
               topRight: Radius.circular(24),
             ),
@@ -133,22 +159,27 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _dashboardContent() {
+    final theme = Theme.of(context);
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             "Total Balance",
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+            style: theme.textTheme.bodyMedium?.copyWith(
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
+            ),
           ),
           const SizedBox(height: 5),
-          const Text(
+          Text(
             "\$12,549.00",
-            style: TextStyle(
+            style: theme.textTheme.headlineSmall?.copyWith(
               fontSize: 32,
               fontWeight: FontWeight.bold,
-              color: Colors.black,
+              color: theme.colorScheme.onSurface,
             ),
           ),
           const SizedBox(height: 25),
@@ -163,20 +194,23 @@ class _HomePageState extends State<HomePage> {
                     sideTitles: SideTitles(
                       showTitles: true,
                       getTitlesWidget: (value, meta) {
+                        final theme = Theme.of(context);
                         const months = ["Aug", "Sep", "Oct", "Nov", "Dec"];
                         return Text(
                           months[value.toInt() % 5],
-                          style: const TextStyle(fontSize: 11),
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            fontSize: 11,
+                          ),
                         );
                       },
                     ),
                   ),
-                  leftTitles:
-                      const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  topTitles:
-                      const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  rightTitles:
-                      const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  leftTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false)),
+                  topTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false)),
+                  rightTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false)),
                 ),
                 barGroups: [
                   _bar(0, 12),
@@ -213,6 +247,17 @@ class _HomePageState extends State<HomePage> {
     required int index,
   }) {
     final isActive = _bottomIndex == index;
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    final Color activeIconColor = Colors.white;
+    final Color inactiveIconColor = isDark
+        ? Colors.white.withOpacity(0.65)
+        : Colors.white.withOpacity(0.85);
+
+    final Color activeBgColor = isDark
+        ? Colors.white.withOpacity(0.16)
+        : Colors.white.withOpacity(0.26);
 
     return GestureDetector(
       onTap: () {
@@ -221,29 +266,42 @@ class _HomePageState extends State<HomePage> {
           _bottomIndex = index;
         });
       },
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            icon,
-            color: isActive ? Colors.white : Colors.white.withOpacity(0.7),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: TextStyle(
-              color: isActive ? Colors.white : Colors.white.withOpacity(0.7),
-              fontSize: 11,
-              fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+        decoration: BoxDecoration(
+          color: isActive ? activeBgColor : Colors.transparent,
+          borderRadius: BorderRadius.circular(999),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              size: 22,
+              color: isActive ? activeIconColor : inactiveIconColor,
             ),
-          ),
-        ],
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: TextStyle(
+                color: isActive ? activeIconColor : inactiveIconColor,
+                fontSize: 11,
+                fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
   Widget _centerProductItem() {
     final isActive = _bottomIndex == 2;
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    final Color shadowColor =
+        isDark ? Colors.black.withOpacity(0.5) : Colors.black.withOpacity(0.25);
 
     return GestureDetector(
       onTap: () {
@@ -266,11 +324,11 @@ class _HomePageState extends State<HomePage> {
                   blurRadius: 10,
                   spreadRadius: 1,
                   offset: const Offset(0, 4),
-                  color: Colors.black.withOpacity(0.25),
+                  color: shadowColor,
                 )
               ],
             ),
-            child: Icon(
+            child: const Icon(
               Icons.inventory_2_rounded,
               color: _primaryBlue,
               size: 30,
@@ -290,42 +348,176 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  // =========================
+  // BOTTOM SHEET PENGATURAN
+  // =========================
   void _openSettingSheet() {
     _handleUserActivity();
+
+    final theme = Theme.of(context);
+    final isDarkGlobal = theme.brightness == Brightness.dark;
+
     showModalBottomSheet(
       context: context,
+      // bedakan warna background untuk light vs dark
+      backgroundColor: isDarkGlobal ? const Color(0xFF020617) : Colors.white,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
       ),
-      builder: (context) {
-        return Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _settingItem(Icons.person, "Data Pribadi"),
-              _settingItem(Icons.photo_camera, "Ganti Foto Profil"),
-              _settingItem(Icons.color_lens, "Ganti Tema"),
-              _settingItem(
-                Icons.logout,
-                "Logout",
-                onTap: widget.onForceLogout,
-              ),
-              const SizedBox(height: 10),
-            ],
+      builder: (sheetContext) {
+        final sheetTheme = Theme.of(sheetContext);
+        final isDark = sheetTheme.brightness == Brightness.dark;
+
+        return SafeArea(
+          top: false,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    margin: const EdgeInsets.only(bottom: 12),
+                    decoration: BoxDecoration(
+                      color: sheetTheme.dividerColor
+                          .withOpacity(isDark ? 0.6 : 0.3),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                  ),
+                ),
+
+                // JUDUL
+                Text(
+                  "Pengaturan",
+                  style: sheetTheme.textTheme.titleMedium?.copyWith(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: sheetTheme.colorScheme.onSurface,
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                // SECTION: Data Diri
+                Text(
+                  "Data Diri",
+                  style: sheetTheme.textTheme.labelMedium?.copyWith(
+                    fontSize: 13,
+                    // agak terang biar kebaca di dark
+                    color: sheetTheme.colorScheme.onSurface
+                        .withOpacity(isDark ? 0.8 : 0.6),
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                _settingItem(
+                  Icons.person,
+                  "Edit Profil",
+                  onTap: () {
+                    Navigator.push(
+                      sheetContext,
+                      MaterialPageRoute(
+                        builder: (_) => const EditProfilePage(),
+                      ),
+                    );
+                  },
+                ),
+
+                const SizedBox(height: 12),
+
+                // SECTION: Tampilan
+                Text(
+                  "Tampilan",
+                  style: sheetTheme.textTheme.labelMedium?.copyWith(
+                    fontSize: 13,
+                    color: sheetTheme.colorScheme.onSurface
+                        .withOpacity(isDark ? 0.8 : 0.6),
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                ListTile(
+                  leading: const Icon(
+                    Icons.dark_mode_outlined,
+                    color: _primaryBlue,
+                  ),
+                  title: Text(
+                    "Mode Gelap",
+                    style: sheetTheme.textTheme.bodyMedium?.copyWith(
+                      fontSize: 16,
+                      color: sheetTheme.colorScheme.onSurface,
+                    ),
+                  ),
+                  trailing: Switch(
+                    // nilai switch ikut theme sekarang
+                    value: isDarkGlobal,
+                    activeColor: _primaryBlue,
+                    onChanged: (value) {
+                      setState(() {
+                        _localDark = value;
+                      });
+                      // trigger ke main.dart
+                      widget.onThemeChanged?.call(value);
+                    },
+                  ),
+                ),
+
+                const SizedBox(height: 12),
+
+                // SECTION: Akun
+                Text(
+                  "Akun",
+                  style: sheetTheme.textTheme.labelMedium?.copyWith(
+                    fontSize: 13,
+                    color: sheetTheme.colorScheme.onSurface
+                        .withOpacity(isDark ? 0.8 : 0.6),
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                _settingItem(
+                  Icons.logout,
+                  "Logout",
+                  onTap: widget.onForceLogout,
+                  textColor: Colors.red,
+                  iconColor: Colors.red,
+                ),
+
+                const SizedBox(height: 8),
+              ],
+            ),
           ),
         );
       },
     );
   }
 
-  Widget _settingItem(IconData icon, String title, {VoidCallback? onTap}) {
+  Widget _settingItem(
+    IconData icon,
+    String title, {
+    VoidCallback? onTap,
+    Color? textColor,
+    Color? iconColor,
+  }) {
+    final theme = Theme.of(context);
+
     return ListTile(
-      leading: Icon(icon, color: _primaryBlue),
-      title: Text(title, style: const TextStyle(fontSize: 16)),
+      leading: Icon(
+        icon,
+        color: iconColor ?? theme.iconTheme.color ?? _primaryBlue,
+      ),
+      title: Text(
+        title,
+        style: theme.textTheme.bodyMedium?.copyWith(
+          fontSize: 16,
+          color: textColor ?? theme.colorScheme.onSurface,
+        ),
+      ),
       onTap: () {
         _handleUserActivity();
-        Navigator.pop(context);
+        Navigator.pop(context); // tutup bottom sheet
         if (onTap != null) onTap();
       },
     );

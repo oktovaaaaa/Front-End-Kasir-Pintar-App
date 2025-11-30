@@ -139,44 +139,64 @@ class _ReportsPageState extends State<ReportsPage>
 
   @override
   Widget build(BuildContext context) {
-    return DefaultTabController(
-      length: 2,
-      child: Column(
-        children: [
-          const SizedBox(height: 8),
-          _buildMainSegmentedTab(),
-          const SizedBox(height: 8),
-          Expanded(
-            child: TabBarView(
-              physics: const BouncingScrollPhysics(),
-              children: [
-                _buildProfitTab(),
-                _buildKasbonTab(),
-              ],
-            ),
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: isDark
+              ? [const Color(0xFF020617), const Color(0xFF020617)]
+              : [_primaryBlue.withOpacity(0.08), Colors.white],
+        ),
+      ),
+      child: SafeArea(
+        child: DefaultTabController(
+          length: 2,
+          child: Column(
+            children: [
+              const SizedBox(height: 8),
+              _buildMainSegmentedTab(),
+              const SizedBox(height: 8),
+              Expanded(
+                child: TabBarView(
+                  physics: const BouncingScrollPhysics(),
+                  children: [
+                    _buildProfitTab(),
+                    _buildKasbonTab(),
+                  ],
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
 
-  /// Tab atas: Laporan / Kasbon (segmented iOS)
+  /// Tab atas: Laporan / Kasbon (segmented)
   Widget _buildMainSegmentedTab() {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
       padding: const EdgeInsets.all(3),
       decoration: BoxDecoration(
-        color: const Color(0xFFE8F2FF),
+        color: isDark ? const Color(0xFF0F172A) : const Color(0xFFE8F2FF),
         borderRadius: BorderRadius.circular(20),
       ),
       child: TabBar(
         indicator: BoxDecoration(
-          color: Colors.white,
+          color: theme.cardColor,
           borderRadius: BorderRadius.circular(16),
         ),
         indicatorSize: TabBarIndicatorSize.tab,
         labelColor: _primaryBlue,
-        unselectedLabelColor: _primaryBlue.withOpacity(0.7),
+        unselectedLabelColor:
+            isDark ? Colors.white70 : _primaryBlue.withOpacity(0.7),
         labelStyle: const TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.w700,
@@ -214,8 +234,7 @@ class _ReportsPageState extends State<ReportsPage>
     );
     final totalTrx = _summary.fold<int>(
       0,
-      (prev, row) =>
-          prev + (int.tryParse(row['transaksi'].toString()) ?? 0),
+      (prev, row) => prev + (int.tryParse(row['transaksi'].toString()) ?? 0),
     );
     final totalQty = _profitProducts.fold<int>(
       0,
@@ -256,22 +275,23 @@ class _ReportsPageState extends State<ReportsPage>
 
   // selector periode (dropdown)
   Widget _buildPeriodSelector() {
+    final theme = Theme.of(context);
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 4),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          const Text(
+          Text(
             'Statistic',
-            style: TextStyle(
-              fontSize: 18,
+            style: theme.textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.w700,
             ),
           ),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: theme.cardColor,
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
@@ -322,11 +342,14 @@ class _ReportsPageState extends State<ReportsPage>
 
   // switch Line / Bar chart
   Widget _buildChartTypeSwitcher() {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 4),
       padding: const EdgeInsets.all(3),
       decoration: BoxDecoration(
-        color: const Color(0xFFE8F2FF),
+        color: isDark ? const Color(0xFF0F172A) : const Color(0xFFE8F2FF),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Row(
@@ -418,13 +441,15 @@ class _ReportsPageState extends State<ReportsPage>
     required String value,
     required VoidCallback onTap,
   }) {
+    final theme = Theme.of(context);
+
     return InkWell(
       borderRadius: BorderRadius.circular(22),
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: theme.cardColor,
           borderRadius: BorderRadius.circular(22),
           boxShadow: [
             BoxShadow(
@@ -471,11 +496,18 @@ class _ReportsPageState extends State<ReportsPage>
   // ---- CHART PROFIT (LINE / BAR) ----
 
   Widget _buildProfitChart() {
+    final theme = Theme.of(context);
+
     if (_summary.isEmpty) {
       return Container(
         height: 220,
         alignment: Alignment.center,
-        child: const Text('Belum ada data untuk grafik'),
+        child: Text(
+          'Belum ada data untuk grafik',
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: theme.colorScheme.onSurface.withOpacity(0.8),
+          ),
+        ),
       );
     }
 
@@ -506,17 +538,21 @@ class _ReportsPageState extends State<ReportsPage>
     return SizedBox(
       height: 260,
       child: Card(
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        elevation: 2,
+        color: theme.cardColor,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        elevation: 3,
         child: Padding(
           padding: const EdgeInsets.fromLTRB(12, 12, 18, 12),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
+              Text(
                 'Overview',
-                style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 4),
               Text(
@@ -527,7 +563,10 @@ class _ReportsPageState extends State<ReportsPage>
                         : _period == 'monthly'
                             ? 'Per Bulan'
                             : 'Per Tahun',
-                style: const TextStyle(fontSize: 11, color: Colors.grey),
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurface.withOpacity(0.7),
+                  fontSize: 11,
+                ),
               ),
               const SizedBox(height: 8),
               Expanded(
@@ -549,18 +588,18 @@ class _ReportsPageState extends State<ReportsPage>
                             border: const Border(
                               left: BorderSide(color: Colors.black12),
                               bottom: BorderSide(color: Colors.black12),
-                              right: BorderSide(
-                                  color: Colors.transparent),
+                              right:
+                                  BorderSide(color: Colors.transparent),
                               top: BorderSide(color: Colors.transparent),
                             ),
                           ),
                           titlesData: FlTitlesData(
                             rightTitles: const AxisTitles(
-                                sideTitles:
-                                    SideTitles(showTitles: false)),
+                              sideTitles: SideTitles(showTitles: false),
+                            ),
                             topTitles: const AxisTitles(
-                                sideTitles:
-                                    SideTitles(showTitles: false)),
+                              sideTitles: SideTitles(showTitles: false),
+                            ),
                             leftTitles: AxisTitles(
                               sideTitles: SideTitles(
                                 showTitles: true,
@@ -588,8 +627,7 @@ class _ReportsPageState extends State<ReportsPage>
                                     child: Text(
                                       labels[index]!,
                                       textAlign: TextAlign.center,
-                                      style:
-                                          const TextStyle(fontSize: 9),
+                                      style: const TextStyle(fontSize: 9),
                                     ),
                                   );
                                 },
@@ -615,6 +653,7 @@ class _ReportsPageState extends State<ReportsPage>
                             ),
                           ),
                           lineBarsData: [
+                            // garis omzet (sales)
                             LineChartBarData(
                               spots: [
                                 for (int i = 0; i < profits.length; i++)
@@ -642,6 +681,7 @@ class _ReportsPageState extends State<ReportsPage>
                                 ],
                               ),
                             ),
+                            // garis profit
                             LineChartBarData(
                               spots: [
                                 for (int i = 0; i < profits.length; i++)
@@ -670,11 +710,11 @@ class _ReportsPageState extends State<ReportsPage>
                           borderData: FlBorderData(show: false),
                           titlesData: FlTitlesData(
                             rightTitles: const AxisTitles(
-                                sideTitles:
-                                    SideTitles(showTitles: false)),
+                              sideTitles: SideTitles(showTitles: false),
+                            ),
                             topTitles: const AxisTitles(
-                                sideTitles:
-                                    SideTitles(showTitles: false)),
+                              sideTitles: SideTitles(showTitles: false),
+                            ),
                             leftTitles: AxisTitles(
                               sideTitles: SideTitles(
                                 showTitles: true,
@@ -702,8 +742,7 @@ class _ReportsPageState extends State<ReportsPage>
                                     child: Text(
                                       labels[index]!,
                                       textAlign: TextAlign.center,
-                                      style:
-                                          const TextStyle(fontSize: 9),
+                                      style: const TextStyle(fontSize: 9),
                                     ),
                                   );
                                 },
@@ -728,8 +767,7 @@ class _ReportsPageState extends State<ReportsPage>
                                     borderRadius:
                                         BorderRadius.circular(4),
                                     width: 8,
-                                    color:
-                                        Colors.green.withOpacity(0.9),
+                                    color: Colors.green.withOpacity(0.9),
                                   ),
                                 ],
                               ),
@@ -796,8 +834,7 @@ class _ReportsPageState extends State<ReportsPage>
             ..._profitProducts.take(10).map((row) {
               final name = row['product_name']?.toString() ?? '';
               final profit =
-                  double.tryParse(row['total_profit'].toString()) ??
-                      0.0;
+                  double.tryParse(row['total_profit'].toString()) ?? 0.0;
               final qty =
                   int.tryParse(row['total_qty'].toString()) ?? 0;
               return ListTile(
@@ -824,7 +861,7 @@ class _ReportsPageState extends State<ReportsPage>
           children: [
             Text(
               _money.format(totalSales),
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
                 color: _primaryBlue,
@@ -839,8 +876,7 @@ class _ReportsPageState extends State<ReportsPage>
             ..._profitProducts.take(10).map((row) {
               final name = row['product_name']?.toString() ?? '';
               final sales =
-                  double.tryParse(row['total_sales'].toString()) ??
-                      0.0;
+                  double.tryParse(row['total_sales'].toString()) ?? 0.0;
               final qty =
                   int.tryParse(row['total_qty'].toString()) ?? 0;
               return ListTile(
@@ -850,7 +886,7 @@ class _ReportsPageState extends State<ReportsPage>
                 subtitle: Text('Terjual $qty pcs'),
                 trailing: Text(
                   _money.format(sales),
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     color: _primaryBlue,
                   ),
@@ -925,8 +961,7 @@ class _ReportsPageState extends State<ReportsPage>
               final qty =
                   int.tryParse(row['total_qty'].toString()) ?? 0;
               final sales =
-                  double.tryParse(row['total_sales'].toString()) ??
-                      0.0;
+                  double.tryParse(row['total_sales'].toString()) ?? 0.0;
               return ListTile(
                 dense: true,
                 contentPadding: EdgeInsets.zero,
@@ -989,17 +1024,24 @@ class _ReportsPageState extends State<ReportsPage>
 
   // === GLOBAL SEARCH FIELD ===
   Widget _buildGlobalSearchField() {
+    final theme = Theme.of(context);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Top Produk',
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+          ),
         ),
         const SizedBox(height: 4),
-        const Text(
+        Text(
           'Produk dengan keuntungan tertinggi pada periode ini.',
-          style: TextStyle(fontSize: 11, color: Colors.grey),
+          style: theme.textTheme.bodySmall?.copyWith(
+            fontSize: 11,
+            color: theme.colorScheme.onSurface.withOpacity(0.7),
+          ),
         ),
         const SizedBox(height: 8),
         TextField(
@@ -1024,6 +1066,8 @@ class _ReportsPageState extends State<ReportsPage>
   // ==== TOP PRODUK (dengan detail timeline) ====
 
   Widget _buildProductProfitSection() {
+    final theme = Theme.of(context);
+
     if (_loadingProd && _profitProducts.isEmpty) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -1038,7 +1082,7 @@ class _ReportsPageState extends State<ReportsPage>
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (!_globalSearch.isEmpty)
-          const SizedBox.shrink(), // judul Top Produk sudah di bagian search
+          const SizedBox.shrink(),
         const SizedBox(height: 8),
         if (filtered.isEmpty)
           const Text(
@@ -1058,7 +1102,7 @@ class _ReportsPageState extends State<ReportsPage>
             return Container(
               margin: const EdgeInsets.only(bottom: 8),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: theme.cardColor,
                 borderRadius: BorderRadius.circular(18),
                 boxShadow: [
                   BoxShadow(
@@ -1371,9 +1415,8 @@ class _ReportsPageState extends State<ReportsPage>
             style: TextStyle(
               fontSize: 11,
               fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
-              color: selected
-                  ? _primaryBlue
-                  : _primaryBlue.withOpacity(0.7),
+              color:
+                  selected ? _primaryBlue : _primaryBlue.withOpacity(0.7),
             ),
           ),
         ),
@@ -1393,6 +1436,7 @@ class _ReportsPageState extends State<ReportsPage>
         onTap: () {
           if (!selected) {
             setSheetState(() {
+              // rubah chart type di bottom sheet
               current = value;
             });
           }
@@ -1410,9 +1454,8 @@ class _ReportsPageState extends State<ReportsPage>
             style: TextStyle(
               fontSize: 11,
               fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
-              color: selected
-                  ? _primaryBlue
-                  : _primaryBlue.withOpacity(0.7),
+              color:
+                  selected ? _primaryBlue : _primaryBlue.withOpacity(0.7),
             ),
           ),
         ),
@@ -1637,6 +1680,8 @@ class _ReportsPageState extends State<ReportsPage>
   // ==== TOP KATEGORI ====
 
   Widget _buildCategoryProfitSection() {
+    final theme = Theme.of(context);
+
     if (_loadingCat && _profitCategories.isEmpty) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -1651,14 +1696,19 @@ class _ReportsPageState extends State<ReportsPage>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Top Kategori',
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+          ),
         ),
         const SizedBox(height: 4),
-        const Text(
+        Text(
           'Kategori dengan kontribusi keuntungan terbesar.',
-          style: TextStyle(fontSize: 11, color: Colors.grey),
+          style: theme.textTheme.bodySmall?.copyWith(
+            fontSize: 11,
+            color: theme.colorScheme.onSurface.withOpacity(0.7),
+          ),
         ),
         const SizedBox(height: 8),
         if (filtered.isEmpty)
@@ -1679,7 +1729,7 @@ class _ReportsPageState extends State<ReportsPage>
             return Container(
               margin: const EdgeInsets.only(bottom: 8),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: theme.cardColor,
                 borderRadius: BorderRadius.circular(18),
                 boxShadow: [
                   BoxShadow(
@@ -1739,8 +1789,8 @@ class _ReportsPageState extends State<ReportsPage>
     if (categoryId == 0) return;
 
     try {
-      final initialTimeline = await _reportService
-          .getCategoryTimeline(categoryId, _period);
+      final initialTimeline =
+          await _reportService.getCategoryTimeline(categoryId, _period);
 
       String sheetPeriod = _period;
       String sheetChartType = 'line';
@@ -1899,6 +1949,8 @@ class _ReportsPageState extends State<ReportsPage>
   // ---- TAB: KASBON ----
 
   Widget _buildKasbonTab() {
+    final theme = Theme.of(context);
+
     if (_loadingKasbon && _kasbon.isEmpty) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -1942,7 +1994,7 @@ class _ReportsPageState extends State<ReportsPage>
           return Container(
             margin: const EdgeInsets.only(bottom: 10),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: theme.cardColor,
               borderRadius: BorderRadius.circular(18),
               boxShadow: [
                 BoxShadow(
@@ -2055,124 +2107,109 @@ class _ReportsPageState extends State<ReportsPage>
         double.tryParse(row['paid_amount'].toString()) ?? 0.0;
     final double remain = total - paid;
 
-final formatter = NumberFormat.decimalPattern('id_ID');
-final controller = TextEditingController(
-  text: formatter.format(remain.toInt()),
-);
+    final formatter = NumberFormat.decimalPattern('id_ID');
+    final controller = TextEditingController(
+      text: formatter.format(remain.toInt()),
+    );
 
-
-   final result = await showModalBottomSheet<bool>(
-  context: context,
-  isScrollControlled: true,
-  shape: const RoundedRectangleBorder(
-    borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-  ),
-  builder: (context) {
-    return Padding(
-      padding: EdgeInsets.only(
-        left: 16,
-        right: 16,
-        top: 16,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+    final result = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Center(
-            child: Container(
-              width: 40,
-              height: 4,
-              margin: const EdgeInsets.only(bottom: 12),
-              decoration: BoxDecoration(
-                color: Colors.grey[400],
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
+      builder: (context) {
+        return Padding(
+          padding: EdgeInsets.only(
+            left: 16,
+            right: 16,
+            top: 16,
+            bottom: MediaQuery.of(context).viewInsets.bottom + 16,
           ),
-
-          const Text(
-            'Bayar Kasbon',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-
-          const SizedBox(height: 8),
-
-          Text(
-            'Total: ${_money.format(total)}',
-            style: const TextStyle(fontSize: 12),
-          ),
-
-          Text(
-            'Sudah dibayar: ${_money.format(paid)}',
-            style: const TextStyle(fontSize: 12),
-          ),
-
-          // ------------------------------
-          //      SISA (warna merah)
-          // ------------------------------
-          RichText(
-            text: TextSpan(
-              text: 'Sisa: ',
-              style: const TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: Colors.black, // teks "Sisa:" hitam
-              ),
-              children: [
-                TextSpan(
-                  text: _money.format(remain),
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.red, // nominal merah
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: 12),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[400],
+                    borderRadius: BorderRadius.circular(2),
                   ),
                 ),
-              ],
-            ),
-          ),
-          // ------------------------------
-
-          const SizedBox(height: 12),
-
-          TextField(
-            controller: controller,
-            keyboardType: TextInputType.number,
-            decoration: const InputDecoration(
-              labelText: 'Nominal bayar',
-              hintText: 'Nominal yang akan dibayar',
-            ),
-          ),
-
-          const SizedBox(height: 12),
-
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: _primaryBlue,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(18),
+              ),
+              const Text(
+                'Bayar Kasbon',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
-              onPressed: () {
-                Navigator.pop(context, true);
-              },
-              child: const Text(
-                'Simpan Pembayaran',
-                style: TextStyle(color: Colors.white),
+              const SizedBox(height: 8),
+              Text(
+                'Total: ${_money.format(total)}',
+                style: const TextStyle(fontSize: 12),
               ),
-            ),
+              Text(
+                'Sudah dibayar: ${_money.format(paid)}',
+                style: const TextStyle(fontSize: 12),
+              ),
+              RichText(
+                text: TextSpan(
+                  text: 'Sisa: ',
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black,
+                  ),
+                  children: [
+                    TextSpan(
+                      text: _money.format(remain),
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.red,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: controller,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(
+                  labelText: 'Nominal bayar',
+                  hintText: 'Nominal yang akan dibayar',
+                ),
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _primaryBlue,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(18),
+                    ),
+                  ),
+                  onPressed: () {
+                    Navigator.pop(context, true);
+                  },
+                  child: const Text(
+                    'Simpan Pembayaran',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
-  },
-);
-
 
     if (result == true) {
       final text =

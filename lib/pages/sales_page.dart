@@ -12,7 +12,6 @@ import '../services/customer_service.dart';
 class SalesPage extends StatefulWidget {
   final VoidCallback onUserActivity;
 
-
   const SalesPage({super.key, required this.onUserActivity});
 
   @override
@@ -171,13 +170,19 @@ class _SalesPageState extends State<SalesPage> {
       return;
     }
 
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     showModalBottomSheet(
       context: context,
+      backgroundColor: isDark ? const Color(0xFF020617) : Colors.white,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      builder: (context) {
+      builder: (sheetContext) {
+        final sheetTheme = Theme.of(sheetContext);
+
         return StatefulBuilder(
           builder: (context, setSheetState) {
             void refresh() {
@@ -202,7 +207,7 @@ class _SalesPageState extends State<SalesPage> {
                     height: 4,
                     margin: const EdgeInsets.only(bottom: 12),
                     decoration: BoxDecoration(
-                      color: Colors.grey[400],
+                      color: sheetTheme.dividerColor.withOpacity(0.6),
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
@@ -211,11 +216,12 @@ class _SalesPageState extends State<SalesPage> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
+                      Text(
                         'Rincian Keranjang',
-                        style: TextStyle(
+                        style: sheetTheme.textTheme.titleMedium?.copyWith(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
+                          color: sheetTheme.colorScheme.onSurface,
                         ),
                       ),
                       Container(
@@ -254,7 +260,7 @@ class _SalesPageState extends State<SalesPage> {
                           margin: const EdgeInsets.only(bottom: 8),
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            color: Colors.white,
+                            color: sheetTheme.cardColor,
                             borderRadius: BorderRadius.circular(14),
                             boxShadow: [
                               BoxShadow(
@@ -273,17 +279,22 @@ class _SalesPageState extends State<SalesPage> {
                                   children: [
                                     Text(
                                       product.name,
-                                      style: const TextStyle(
+                                      style: sheetTheme.textTheme.bodyMedium?.copyWith(
                                         fontSize: 14,
                                         fontWeight: FontWeight.w600,
+                                        color:
+                                            sheetTheme.colorScheme.onSurface,
                                       ),
                                     ),
                                     const SizedBox(height: 4),
                                     Text(
                                       _priceFormatter.format(product.price),
-                                      style: TextStyle(
+                                      style: sheetTheme.textTheme.bodySmall
+                                          ?.copyWith(
                                         fontSize: 12,
-                                        color: Colors.grey[700],
+                                        color: sheetTheme
+                                            .colorScheme.onSurface
+                                            .withOpacity(0.7),
                                       ),
                                     ),
                                     const SizedBox(height: 4),
@@ -355,7 +366,7 @@ class _SalesPageState extends State<SalesPage> {
                                       size: 22,
                                     ),
                                     color: qty >= product.stock
-                                        ? Colors.grey
+                                        ? sheetTheme.disabledColor
                                         : _primaryBlue,
                                     onPressed: qty >= product.stock
                                         ? null
@@ -379,9 +390,10 @@ class _SalesPageState extends State<SalesPage> {
                               // subtotal
                               Text(
                                 _priceFormatter.format(subtotal),
-                                style: const TextStyle(
+                                style: sheetTheme.textTheme.bodyMedium?.copyWith(
                                   fontSize: 12,
                                   fontWeight: FontWeight.bold,
+                                  color: sheetTheme.colorScheme.onSurface,
                                 ),
                               ),
                             ],
@@ -397,18 +409,20 @@ class _SalesPageState extends State<SalesPage> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
+                      Text(
                         'Total',
-                        style: TextStyle(
+                        style: sheetTheme.textTheme.titleMedium?.copyWith(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
+                          color: sheetTheme.colorScheme.onSurface,
                         ),
                       ),
                       Text(
                         _priceFormatter.format(_totalPrice),
-                        style: const TextStyle(
+                        style: sheetTheme.textTheme.titleMedium?.copyWith(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
+                          color: sheetTheme.colorScheme.onSurface,
                         ),
                       ),
                     ],
@@ -458,13 +472,19 @@ class _SalesPageState extends State<SalesPage> {
       return;
     }
 
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     showModalBottomSheet(
       context: context,
+      backgroundColor: isDark ? const Color(0xFF020617) : Colors.white,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      builder: (context) {
+      builder: (sheetContext) {
+        final sheetTheme = Theme.of(sheetContext);
+
         final TextEditingController paidAmountController =
             TextEditingController();
 
@@ -557,7 +577,7 @@ class _SalesPageState extends State<SalesPage> {
                       height: 4,
                       margin: const EdgeInsets.only(bottom: 16),
                       decoration: BoxDecoration(
-                        color: Colors.grey[400],
+                        color: sheetTheme.dividerColor.withOpacity(0.6),
                         borderRadius: BorderRadius.circular(2),
                       ),
                     ),
@@ -642,7 +662,7 @@ class _SalesPageState extends State<SalesPage> {
                       width: double.infinity,
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: sheetTheme.cardColor,
                         borderRadius: BorderRadius.circular(18),
                         boxShadow: [
                           BoxShadow(
@@ -692,15 +712,18 @@ class _SalesPageState extends State<SalesPage> {
                                   contentPadding: EdgeInsets.zero,
                                   title: Text(
                                     product.name,
-                                    style: const TextStyle(fontSize: 13),
+                                    style: sheetTheme.textTheme.bodyMedium
+                                        ?.copyWith(fontSize: 13),
                                   ),
                                   subtitle: Text(
                                     '${qty}x  ${_priceFormatter.format(product.price)}',
-                                    style: const TextStyle(fontSize: 11),
+                                    style: sheetTheme.textTheme.bodySmall
+                                        ?.copyWith(fontSize: 11),
                                   ),
                                   trailing: Text(
                                     _priceFormatter.format(subtotal),
-                                    style: const TextStyle(
+                                    style: sheetTheme.textTheme.bodyMedium
+                                        ?.copyWith(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 12,
                                     ),
@@ -720,7 +743,7 @@ class _SalesPageState extends State<SalesPage> {
                       width: double.infinity,
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: sheetTheme.cardColor,
                         borderRadius: BorderRadius.circular(18),
                         boxShadow: [
                           BoxShadow(
@@ -754,9 +777,10 @@ class _SalesPageState extends State<SalesPage> {
                           Text(
                             'Nama Pelanggan (opsional)\n'
                             'Wajib dipilih kalau bayar kurang (kasbon).',
-                            style: TextStyle(
+                            style: sheetTheme.textTheme.bodySmall?.copyWith(
                               fontSize: 11,
-                              color: Colors.grey[600],
+                              color: sheetTheme.colorScheme.onSurface
+                                  .withOpacity(0.7),
                             ),
                           ),
                           const SizedBox(height: 4),
@@ -809,41 +833,46 @@ class _SalesPageState extends State<SalesPage> {
                           ),
                           const SizedBox(height: 6),
 
+                          TextField(
+                            controller: paidAmountController,
+                            keyboardType: TextInputType.number,
+                            decoration: const InputDecoration(
+                              labelText:
+                                  'Uang diterima (boleh 0 kalau full kasbon)',
+                              hintText: 'contoh: 50.000',
+                              border: OutlineInputBorder(),
+                            ),
+                            onChanged: (value) {
+                              // Ambil angka asli (hapus titik)
+                              final digits =
+                                  value.replaceAll(RegExp(r'[^0-9]'), '');
 
-TextField(
-  controller: paidAmountController,
-  keyboardType: TextInputType.number,
-  decoration: const InputDecoration(
-    labelText: 'Uang diterima (boleh 0 kalau full kasbon)',
-    hintText: 'contoh: 50.000',
-    border: OutlineInputBorder(),
-  ),
-  onChanged: (value) {
-    // Ambil angka asli (hapus titik)
-    final digits = value.replaceAll(RegExp(r'[^0-9]'), '');
+                              if (digits.isEmpty) {
+                                paidAmountController.value =
+                                    const TextEditingValue(
+                                  text: '',
+                                  selection:
+                                      TextSelection.collapsed(offset: 0),
+                                );
+                                _updateAmounts();
+                                return;
+                              }
 
-    if (digits.isEmpty) {
-      paidAmountController.value = const TextEditingValue(
-        text: '',
-        selection: TextSelection.collapsed(offset: 0),
-      );
-      _updateAmounts();
-      return;
-    }
+                              // Format ulang: 1000 -> 1.000
+                              final number = int.parse(digits);
+                              final newText =
+                                  decimalFormatter.format(number);
 
-    // Format ulang: 1000 -> 1.000
-    final number = int.parse(digits);
-    final newText = decimalFormatter.format(number);
+                              // Update textfield tanpa kursor lompat ke depan
+                              paidAmountController.value = TextEditingValue(
+                                text: newText,
+                                selection: TextSelection.collapsed(
+                                    offset: newText.length),
+                              );
 
-    // Update textfield tanpa kursor lompat ke depan
-    paidAmountController.value = TextEditingValue(
-      text: newText,
-      selection: TextSelection.collapsed(offset: newText.length),
-    );
-
-    _updateAmounts();
-  },
-),
+                              _updateAmounts();
+                            },
+                          ),
 
                           const SizedBox(height: 10),
 
@@ -888,7 +917,8 @@ TextField(
                                         fontSize: 13,
                                         color: sisaBayar > 0
                                             ? Colors.red[400]
-                                            : Colors.grey[800],
+                                            : sheetTheme
+                                                .colorScheme.onSurface,
                                       ),
                                     ),
                                   ],
@@ -917,27 +947,26 @@ TextField(
                     const SizedBox(height: 18),
 
                     // BUTTON SIMPAN
-SizedBox(
-  width: double.infinity,
-  child: ElevatedButton(
-    style: ElevatedButton.styleFrom(
-      backgroundColor: _primaryBlue,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(18),
-      ),
-      padding: const EdgeInsets.symmetric(vertical: 12),
-    ),
-    onPressed: _submit,
-    child: const Text(
-      'Simpan Transaksi',
-      style: TextStyle(
-        fontWeight: FontWeight.w600,
-        color: Colors.white, // teks tombol jadi putih
-      ),
-    ),
-  ),
-),
-
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: _primaryBlue,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(18),
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                        ),
+                        onPressed: _submit,
+                        child: const Text(
+                          'Simpan Transaksi',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white, // teks tombol jadi putih
+                          ),
+                        ),
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -950,24 +979,40 @@ SizedBox(
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Scaffold(
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: Container(
-        // gradient lembut
+        // gradient lembut, ikut mode
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [
-              _primaryBlue.withOpacity(0.18),
-              Colors.white,
-            ],
+            colors: isDark
+                ? [
+                    theme.colorScheme.primary.withOpacity(0.15),
+                    theme.scaffoldBackgroundColor,
+                  ]
+                : [
+                    _primaryBlue.withOpacity(0.18),
+                    theme.scaffoldBackgroundColor,
+                  ],
           ),
         ),
         child: SafeArea(
           child: _isLoading
               ? const Center(child: CircularProgressIndicator())
               : _allProducts.isEmpty
-                  ? const Center(child: Text('Belum ada produk'))
+                  ? Center(
+                      child: Text(
+                        'Belum ada produk',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.onSurface,
+                        ),
+                      ),
+                    )
                   : Column(
                       children: [
                         const SizedBox(height: 8),
@@ -981,7 +1026,7 @@ SizedBox(
                               Expanded(
                                 child: Container(
                                   decoration: BoxDecoration(
-                                    color: Colors.white,
+                                    color: theme.cardColor,
                                     borderRadius: BorderRadius.circular(24),
                                     boxShadow: [
                                       BoxShadow(
@@ -992,14 +1037,21 @@ SizedBox(
                                     ],
                                   ),
                                   child: TextField(
-                                    decoration: const InputDecoration(
+                                    decoration: InputDecoration(
                                       hintText: 'Cari produk...',
                                       border: InputBorder.none,
-                                      prefixIcon: Icon(Icons.search),
-                                      contentPadding: EdgeInsets.symmetric(
+                                      prefixIcon: Icon(
+                                        Icons.search,
+                                        color: theme.iconTheme.color,
+                                      ),
+                                      contentPadding:
+                                          const EdgeInsets.symmetric(
                                         horizontal: 16,
                                         vertical: 12,
                                       ),
+                                    ),
+                                    style: theme.textTheme.bodyMedium?.copyWith(
+                                      color: theme.colorScheme.onSurface,
                                     ),
                                     onChanged: (value) {
                                       _searchText = value;
@@ -1016,7 +1068,7 @@ SizedBox(
                                 padding: const EdgeInsets.symmetric(
                                     horizontal: 12, vertical: 8),
                                 decoration: BoxDecoration(
-                                  color: Colors.white,
+                                  color: theme.cardColor,
                                   borderRadius: BorderRadius.circular(24),
                                   boxShadow: [
                                     BoxShadow(
@@ -1029,13 +1081,14 @@ SizedBox(
                                 child: DropdownButtonHideUnderline(
                                   child: DropdownButton<int?>(
                                     value: _selectedCategoryId,
-                                    icon: const Icon(
+                                    icon: Icon(
                                       Icons.keyboard_arrow_down_rounded,
                                       size: 18,
+                                      color: theme.iconTheme.color,
                                     ),
-                                    style: const TextStyle(
+                                    style: theme.textTheme.bodyMedium?.copyWith(
                                       fontSize: 13,
-                                      color: Colors.black,
+                                      color: theme.colorScheme.onSurface,
                                     ),
                                     onChanged: (value) {
                                       _selectedCategoryId = value;
@@ -1065,9 +1118,11 @@ SizedBox(
                         // ====== GRID PRODUK ======
                         Expanded(
                           child: Container(
-                            decoration: const BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.only(
+                            // ini penting: background grid sama dengan scaffold,
+                            // jadi card (theme.cardColor) kelihatan “mengambang”
+                            decoration: BoxDecoration(
+                              color: theme.scaffoldBackgroundColor,
+                              borderRadius: const BorderRadius.only(
                                 topLeft: Radius.circular(24),
                                 topRight: Radius.circular(24),
                               ),
@@ -1100,127 +1155,135 @@ SizedBox(
       ),
     );
   }
-Widget _buildProductCard(Product p, int qty) {
-  return GestureDetector(
-    onTap: () => _addToCart(p),
-    onLongPress: () => _removeFromCart(p),
-    child: Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.06),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // GAMBAR
-          Expanded(
-            child: ClipRRect(
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(18),
-                topRight: Radius.circular(18),
-              ),
-              child: SizedBox.expand(
-                child: p.imageUrl != null
-                    ? Image.network(
-                        p.imageUrl!,
-                        fit: BoxFit.cover,
-                      )
-                    : Container(
-                        color: Colors.grey[200],
-                        child: const Icon(
-                          Icons.image_outlined,
-                          size: 40,
-                          color: Colors.grey,
+
+  Widget _buildProductCard(Product p, int qty) {
+    final theme = Theme.of(context);
+
+    // Card pakai theme.cardColor → sama behaviour-nya kayak SalesHistory
+    final Color cardColor = theme.cardColor;
+
+    return GestureDetector(
+      onTap: () => _addToCart(p),
+      onLongPress: () => _removeFromCart(p),
+      child: Container(
+        decoration: BoxDecoration(
+          color: cardColor,
+          borderRadius: BorderRadius.circular(18),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.06),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // GAMBAR
+            Expanded(
+              child: ClipRRect(
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(18),
+                  topRight: Radius.circular(18),
+                ),
+                child: SizedBox.expand(
+                  child: p.imageUrl != null
+                      ? Image.network(
+                          p.imageUrl!,
+                          fit: BoxFit.cover,
+                        )
+                      : Container(
+                          color: theme.colorScheme.surfaceVariant,
+                          child: Icon(
+                            Icons.image_outlined,
+                            size: 40,
+                            color:
+                                theme.colorScheme.onSurface.withOpacity(0.6),
+                          ),
                         ),
-                      ),
+                ),
               ),
             ),
-          ),
 
-          // ISI KARTU
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // HARGA
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: _primaryBlue,
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Text(
-                    _priceFormatter.format(p.price),
-                    style: const TextStyle(
-                      fontSize: 11,
-                      color: Colors.white,
-                      fontWeight: FontWeight.w600,
+            // ISI KARTU
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // HARGA
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: _primaryBlue,
+                      borderRadius: BorderRadius.circular(16),
                     ),
-                  ),
-                ),
-                const SizedBox(height: 6),
-
-                // NAMA
-                Text(
-                  p.name,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 4),
-
-                // STOK + QTY
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      '${p.stock} Stok',
-                      style: TextStyle(
+                    child: Text(
+                      _priceFormatter.format(p.price),
+                      style: const TextStyle(
                         fontSize: 11,
-                        color: _getStockColor(p.stock),
+                        color: Colors.white,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
+                  ),
+                  const SizedBox(height: 6),
 
-                    if (qty > 0)
-                      Container(
-                        padding:
-                            const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: _primaryBlue.withOpacity(0.15),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          'x$qty',
-                          style: const TextStyle(
-                            fontSize: 11,
-                            color: _primaryBlue,
-                            fontWeight: FontWeight.w600,
-                          ),
+                  // NAMA
+                  Text(
+                    p.name,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: theme.colorScheme.onSurface,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+
+                  // STOK + QTY
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        '${p.stock} Stok',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: _getStockColor(p.stock),
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    ),
-  );
-}
 
+                      if (qty > 0)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: _primaryBlue.withOpacity(0.15),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            'x$qty',
+                            style: const TextStyle(
+                              fontSize: 11,
+                              color: _primaryBlue,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
   Widget _buildBottomCartBar() {
     return SafeArea(
@@ -1232,8 +1295,7 @@ Widget _buildProductCard(Product p, int qty) {
           child: Opacity(
             opacity: _cart.isEmpty ? 0.4 : 1,
             child: Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
               decoration: BoxDecoration(
                 color: _primaryBlue,
                 borderRadius: BorderRadius.circular(32),
@@ -1261,7 +1323,7 @@ Widget _buildProductCard(Product p, int qty) {
                     ),
                   ),
                   const Spacer(),
-                  // badge item
+                  // badge item (jumlah item)
                   Container(
                     padding: const EdgeInsets.symmetric(
                         horizontal: 8, vertical: 4),

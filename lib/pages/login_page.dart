@@ -75,12 +75,16 @@ class _LoginPageState extends State<LoginPage> {
     required String label,
     required IconData icon,
   }) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final onSurface = theme.colorScheme.onSurface;
+
     return InputDecoration(
       labelText: label,
       prefixIcon: Icon(icon),
       prefixIconColor: _primaryBlue,
       filled: true,
-      fillColor: const Color(0xFFF5F8FE),
+      fillColor: isDark ? theme.colorScheme.surface : const Color(0xFFF5F8FE),
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(18),
@@ -95,7 +99,7 @@ class _LoginPageState extends State<LoginPage> {
         borderSide: const BorderSide(color: _primaryBlue, width: 1.4),
       ),
       labelStyle: TextStyle(
-        color: Colors.grey.shade600,
+        color: onSurface.withOpacity(isDark ? 0.7 : 0.6),
         fontSize: 13,
       ),
     );
@@ -103,19 +107,38 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final onSurface = theme.colorScheme.onSurface;
+
+    final Color titleColor = isDark ? onSurface : _darkBlue;
+    final Color subtitleColor =
+        isDark ? onSurface.withOpacity(0.7) : Colors.grey.shade700;
+
+    // =============== OPSI 1 ===============
+    // DARK MODE = FULL SOLID COLOR
+    // LIGHT MODE = GRADIENT
+    final BoxDecoration backgroundDecoration = isDark
+        ? BoxDecoration(
+            color: theme.scaffoldBackgroundColor,
+          )
+        : const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Color(0xFFe8f4fb),
+                Color(0xFFc3ddf3),
+              ],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
+          );
+
+    final Color cardColor = theme.cardColor;
+
     return Scaffold(
-      // background gradient biru
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              Color(0xFFe8f4fb),
-              Color(0xFFc3ddf3),
-            ],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
-        ),
+        decoration: backgroundDecoration,
         child: SafeArea(
           child: Center(
             child: SingleChildScrollView(
@@ -123,17 +146,17 @@ class _LoginPageState extends State<LoginPage> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Logo + nama aplikasi
+                  // ================= LOGO ==================
                   Column(
                     children: [
                       Container(
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: Colors.white,
+                          color: isDark ? theme.cardColor : Colors.white,
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.08),
+                              color: Colors.black.withOpacity(isDark ? 0.35 : 0.08),
                               blurRadius: 18,
                               offset: const Offset(0, 8),
                             ),
@@ -143,17 +166,15 @@ class _LoginPageState extends State<LoginPage> {
                           'assets/kasir.png',
                           height: 70,
                           width: 70,
-                          fit: BoxFit.contain,
                         ),
                       ),
                       const SizedBox(height: 12),
                       Text(
                         'Kasir Resto Pintar',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 22,
                           fontWeight: FontWeight.w700,
-                          color: _darkBlue,
-                          letterSpacing: 0.5,
+                          color: titleColor,
                         ),
                       ),
                       const SizedBox(height: 4),
@@ -162,21 +183,19 @@ class _LoginPageState extends State<LoginPage> {
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontSize: 12,
-                          color: Colors.grey.shade700,
+                          color: subtitleColor,
                         ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 24),
 
+                  // ================= ERROR MESSAGE ==================
                   if (_message != null)
                     Container(
                       margin: const EdgeInsets.only(bottom: 14),
-                      width: double.infinity,
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 10,
-                      ),
+                          horizontal: 12, vertical: 10),
                       decoration: BoxDecoration(
                         color: _message!.toLowerCase().contains('berhasil')
                             ? const Color(0xFFE8F8EF)
@@ -189,17 +208,15 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                       ),
                       child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Icon(
                             _message!.toLowerCase().contains('berhasil')
                                 ? Icons.check_circle_rounded
                                 : Icons.error_rounded,
                             size: 18,
-                            color:
-                                _message!.toLowerCase().contains('berhasil')
-                                    ? const Color(0xFF46A36A)
-                                    : const Color(0xFFD64545),
+                            color: _message!.toLowerCase().contains('berhasil')
+                                ? const Color(0xFF46A36A)
+                                : const Color(0xFFD64545),
                           ),
                           const SizedBox(width: 8),
                           Expanded(
@@ -207,10 +224,9 @@ class _LoginPageState extends State<LoginPage> {
                               _message!,
                               style: TextStyle(
                                 fontSize: 12,
-                                color:
-                                    _message!.toLowerCase().contains('berhasil')
-                                        ? const Color(0xFF2F7A4E)
-                                        : const Color(0xFFB93636),
+                                color: _message!.toLowerCase().contains('berhasil')
+                                    ? const Color(0xFF2F7A4E)
+                                    : const Color(0xFFB93636),
                               ),
                             ),
                           ),
@@ -218,24 +234,25 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                     ),
 
-                  // Card form login
+                  // ================= CARD LOGIN ==================
                   Container(
-                    width: double.infinity,
                     padding: const EdgeInsets.fromLTRB(20, 18, 20, 20),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: cardColor,
                       borderRadius: BorderRadius.circular(26),
+                      border: Border.all(
+                        color: isDark
+                            ? Colors.white.withOpacity(0.06)
+                            : Colors.white.withOpacity(0.7),
+                      ),
                       boxShadow: [
                         BoxShadow(
                           blurRadius: 22,
                           spreadRadius: 2,
-                          color: Colors.black.withOpacity(0.08),
+                          color: Colors.black.withOpacity(isDark ? 0.4 : 0.08),
                           offset: const Offset(0, 14),
                         ),
                       ],
-                      border: Border.all(
-                        color: Colors.white.withOpacity(0.7),
-                      ),
                     ),
                     child: Form(
                       key: _formKey,
@@ -248,7 +265,7 @@ class _LoginPageState extends State<LoginPage> {
                               style: TextStyle(
                                 fontSize: 15,
                                 fontWeight: FontWeight.w600,
-                                color: _darkBlue,
+                                color: titleColor,
                               ),
                             ),
                           ),
@@ -259,7 +276,7 @@ class _LoginPageState extends State<LoginPage> {
                               'Gunakan email yang sudah diverifikasi admin.',
                               style: TextStyle(
                                 fontSize: 11,
-                                color: Colors.grey.shade600,
+                                color: subtitleColor,
                               ),
                             ),
                           ),
@@ -292,18 +309,14 @@ class _LoginPageState extends State<LoginPage> {
                                       ? Icons.visibility_off_rounded
                                       : Icons.visibility_rounded,
                                   size: 20,
-                                  color: Colors.grey.shade600,
+                                  color: subtitleColor,
                                 ),
-                                onPressed: () {
-                                  setState(() {
-                                    _obscurePassword = !_obscurePassword;
-                                  });
-                                },
+                                onPressed: () =>
+                                    setState(() => _obscurePassword = !_obscurePassword),
                               ),
                             ),
-                            validator: (v) => v == null || v.isEmpty
-                                ? 'Password wajib diisi'
-                                : null,
+                            validator: (v) =>
+                                v == null || v.isEmpty ? 'Password wajib diisi' : null,
                           ),
 
                           const SizedBox(height: 8),
@@ -313,7 +326,7 @@ class _LoginPageState extends State<LoginPage> {
                               'Lupa password? Hubungi admin',
                               style: TextStyle(
                                 fontSize: 11,
-                                color: Colors.grey.shade700,
+                                color: subtitleColor,
                               ),
                             ),
                           ),
@@ -325,7 +338,12 @@ class _LoginPageState extends State<LoginPage> {
                             width: double.infinity,
                             height: 48,
                             child: _isLoading
-                                ? const Center(child: CircularProgressIndicator())
+                                ? Center(
+                                    child: CircularProgressIndicator(
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                          theme.colorScheme.primary),
+                                    ),
+                                  )
                                 : ElevatedButton(
                                     onPressed: _login,
                                     style: ElevatedButton.styleFrom(
@@ -333,8 +351,8 @@ class _LoginPageState extends State<LoginPage> {
                                       shape: RoundedRectangleBorder(
                                         borderRadius: BorderRadius.circular(20),
                                       ),
-                                      elevation: 0,
                                       backgroundColor: Colors.transparent,
+                                      shadowColor: Colors.transparent,
                                     ),
                                     child: Ink(
                                       decoration: BoxDecoration(
@@ -348,9 +366,8 @@ class _LoginPageState extends State<LoginPage> {
                                         ),
                                         borderRadius: BorderRadius.circular(20),
                                       ),
-                                      child: Container(
-                                        alignment: Alignment.center,
-                                        child: const Text(
+                                      child: const Center(
+                                        child: Text(
                                           'Masuk Sekarang',
                                           style: TextStyle(
                                             fontSize: 15,
@@ -375,14 +392,12 @@ class _LoginPageState extends State<LoginPage> {
                     children: [
                       Text(
                         'Belum punya akun kasir?',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey.shade800,
-                        ),
+                        style: TextStyle(fontSize: 12, color: subtitleColor),
                       ),
                       TextButton(
                         onPressed: () {
-                          Navigator.of(context).push(
+                          Navigator.push(
+                            context,
                             MaterialPageRoute(
                               builder: (_) => const RegisterPage(),
                             ),
@@ -398,7 +413,6 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 8),
                 ],
               ),
             ),

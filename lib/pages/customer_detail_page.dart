@@ -34,7 +34,7 @@ class _CustomerDetailPageState extends State<CustomerDetailPage> {
   bool _isLoadingSales = false;
   List<Sale> _sales = [];
 
-  late Customer _customer; // agar bisa di-update setelah edit
+  late Customer _customer;
 
   @override
   void initState() {
@@ -48,7 +48,6 @@ class _CustomerDetailPageState extends State<CustomerDetailPage> {
     try {
       final allSales = await _saleService.getSales();
 
-      // filter berdasarkan nama customer
       _sales = allSales
           .where((s) =>
               (s.customerName ?? '').toLowerCase() ==
@@ -90,6 +89,9 @@ class _CustomerDetailPageState extends State<CustomerDetailPage> {
   Future<void> _openEditForm() async {
     widget.onUserActivity();
 
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     final nameController = TextEditingController(text: _customer.name);
     final emailController = TextEditingController(text: _customer.email ?? '');
     final phoneController = TextEditingController(text: _customer.phone ?? '');
@@ -101,209 +103,224 @@ class _CustomerDetailPageState extends State<CustomerDetailPage> {
 
     final formKey = GlobalKey<FormState>();
 
-    final bool? result = await showDialog<bool>(
+    final bool? result = await showModalBottomSheet<bool>(
       context: context,
-      barrierDismissible: true,
-      builder: (context) {
-        return Dialog(
-          insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
-          backgroundColor: Colors.transparent,
-          child: Center(
-            child: Container(
-              width: double.infinity,
-              decoration: BoxDecoration(
-                color: const Color(0xFFF8F7FF),
-                borderRadius: BorderRadius.circular(26),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.18),
-                    blurRadius: 24,
-                    offset: const Offset(0, 12),
-                  ),
-                ],
-              ),
-              padding: const EdgeInsets.fromLTRB(20, 22, 20, 16),
-              child: SingleChildScrollView(
-                child: Form(
-                  key: formKey,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Container(
-                            height: 42,
-                            width: 42,
-                            decoration: BoxDecoration(
-                              color: _primaryBlue.withOpacity(0.12),
-                              borderRadius: BorderRadius.circular(14),
-                            ),
-                            child: const Icon(
-                              Icons.person_outline,
-                              color: _primaryBlue,
-                              size: 24,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          const Text(
-                            'Edit Pelanggan',
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.w700,
-                              color: Colors.black87,
-                            ),
-                          ),
-                        ],
+      isScrollControlled: true,
+      backgroundColor: theme.colorScheme.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      builder: (sheetContext) {
+        final sheetTheme = Theme.of(sheetContext);
+        final sheetIsDark = sheetTheme.brightness == Brightness.dark;
+
+        return Padding(
+          padding: EdgeInsets.only(
+            left: 16,
+            right: 16,
+            top: 12,
+            bottom: MediaQuery.of(sheetContext).viewInsets.bottom + 16,
+          ),
+          child: SingleChildScrollView(
+            child: Form(
+              key: formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      margin: const EdgeInsets.only(bottom: 12),
+                      decoration: BoxDecoration(
+                        color: sheetTheme.dividerColor
+                            .withOpacity(sheetIsDark ? 0.7 : 0.4),
+                        borderRadius: BorderRadius.circular(999),
                       ),
-                      const SizedBox(height: 16),
-                      const Text(
-                        'Perbarui informasi pelanggan agar data kasir selalu rapi dan terbaru.',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Color(0xFF8C8CA1),
+                    ),
+                  ),
+                  Row(
+                    children: [
+                      Container(
+                        height: 42,
+                        width: 42,
+                        decoration: BoxDecoration(
+                          color: _primaryBlue.withOpacity(0.18),
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: Icon(
+                          Icons.person_outline,
+                          color: sheetTheme.colorScheme.primary,
+                          size: 24,
                         ),
                       ),
-                      const SizedBox(height: 18),
-
-                      // Nama
-                      _editField(
-                        label: 'Nama lengkap',
-                        controller: nameController,
-                        icon: Icons.badge_outlined,
-                        validator: (v) =>
-                            v == null || v.isEmpty ? 'Nama wajib diisi' : null,
-                      ),
-                      // Telepon
-                      _editField(
-                        label: 'No. Telepon',
-                        controller: phoneController,
-                        icon: Icons.phone_outlined,
-                        keyboardType: TextInputType.phone,
-                      ),
-                      // Email
-                      _editField(
-                        label: 'Email (opsional)',
-                        controller: emailController,
-                        icon: Icons.email_outlined,
-                        keyboardType: TextInputType.emailAddress,
-                      ),
-                      // Alamat
-                      _editField(
-                        label: 'Alamat (opsional)',
-                        controller: addressController,
-                        icon: Icons.location_on_outlined,
-                      ),
-                      // Instansi / perusahaan
-                      _editField(
-                        label: 'Instansi/Perusahaan (opsional)',
-                        controller: companyController,
-                        icon: Icons.apartment_outlined,
-                      ),
-                      // Catatan
-                      _editField(
-                        label: 'Catatan (opsional)',
-                        controller: noteController,
-                        icon: Icons.sticky_note_2_outlined,
-                      ),
-
-                      const SizedBox(height: 18),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          TextButton(
-                            onPressed: () => Navigator.pop<bool>(context, false),
-                            child: const Text(
-                              'Batal',
-                              style: TextStyle(
-                                color: Colors.grey,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          'Edit Pelanggan',
+                          style: sheetTheme.textTheme.titleMedium?.copyWith(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w700,
+                            color: sheetTheme.colorScheme.onSurface,
                           ),
-                          const SizedBox(width: 8),
-                          ElevatedButton.icon(
-                            style: ElevatedButton.styleFrom(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-                              backgroundColor: _primaryBlue,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(22),
-                              ),
-                              elevation: 0,
-                            ),
-                            icon: const Icon(
-                              Icons.check_rounded,
-                              size: 18,
-                            ),
-                           label: const Text(
-  'Simpan',
-  style: TextStyle(
-    fontWeight: FontWeight.w600,
-    color: Colors.white, // ← ini bikin teks jadi putih
-  ),
-                            ),
-                            onPressed: () async {
-                              if (!formKey.currentState!.validate()) return;
-
-                              try {
-                                await _customerService.updateCustomer(
-                                  id: _customer.id,
-                                  name: nameController.text.trim(),
-                                  email: emailController.text.trim().isEmpty
-                                      ? null
-                                      : emailController.text.trim(),
-                                  phone: phoneController.text.trim().isEmpty
-                                      ? null
-                                      : phoneController.text.trim(),
-                                  address: addressController.text.trim().isEmpty
-                                      ? null
-                                      : addressController.text.trim(),
-                                  company: companyController.text.trim().isEmpty
-                                      ? null
-                                      : companyController.text.trim(),
-                                  note: noteController.text.trim().isEmpty
-                                      ? null
-                                      : noteController.text.trim(),
-                                );
-
-                                // update data di UI
-                                setState(() {
-                                  _customer = _customer.copyWith(
-                                    name: nameController.text.trim(),
-                                    email: emailController.text.trim().isEmpty
-                                        ? null
-                                        : emailController.text.trim(),
-                                    phone: phoneController.text.trim().isEmpty
-                                        ? null
-                                        : phoneController.text.trim(),
-                                    address:
-                                        addressController.text.trim().isEmpty
-                                            ? null
-                                            : addressController.text.trim(),
-                                    company:
-                                        companyController.text.trim().isEmpty
-                                            ? null
-                                            : companyController.text.trim(),
-                                    note: noteController.text.trim().isEmpty
-                                        ? null
-                                        : noteController.text.trim(),
-                                  );
-                                });
-
-                                if (context.mounted) {
-                                  Navigator.pop<bool>(context, true);
-                                }
-                              } catch (e) {
-                                _showSnack('Error: $e');
-                              }
-                            },
-                          ),
-                        ],
-                      )
+                        ),
+                      ),
                     ],
                   ),
-                ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Perbarui informasi pelanggan agar data kasir selalu rapi dan terbaru.',
+                    style: sheetTheme.textTheme.bodySmall?.copyWith(
+                      fontSize: 12,
+                      color: sheetTheme.colorScheme.onSurface
+                          .withOpacity(sheetIsDark ? 0.7 : 0.6),
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+
+                  _editField(
+                    label: 'Nama lengkap',
+                    controller: nameController,
+                    icon: Icons.badge_outlined,
+                    validator: (v) =>
+                        v == null || v.isEmpty ? 'Nama wajib diisi' : null,
+                  ),
+                  _editField(
+                    label: 'No. Telepon',
+                    controller: phoneController,
+                    icon: Icons.phone_outlined,
+                    keyboardType: TextInputType.phone,
+                  ),
+                  _editField(
+                    label: 'Email (opsional)',
+                    controller: emailController,
+                    icon: Icons.email_outlined,
+                    keyboardType: TextInputType.emailAddress,
+                  ),
+                  _editField(
+                    label: 'Alamat (opsional)',
+                    controller: addressController,
+                    icon: Icons.location_on_outlined,
+                  ),
+                  _editField(
+                    label: 'Instansi/Perusahaan (opsional)',
+                    controller: companyController,
+                    icon: Icons.apartment_outlined,
+                  ),
+                  _editField(
+                    label: 'Catatan (opsional)',
+                    controller: noteController,
+                    icon: Icons.sticky_note_2_outlined,
+                  ),
+
+                  const SizedBox(height: 18),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      TextButton(
+                        onPressed: () =>
+                            Navigator.pop<bool>(sheetContext, false),
+                        child: Text(
+                          'Batal',
+                          style: sheetTheme.textTheme.bodyMedium?.copyWith(
+                            color: sheetTheme.colorScheme.onSurface
+                                .withOpacity(0.6),
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 18,
+                            vertical: 10,
+                          ),
+                          backgroundColor: sheetTheme.colorScheme.primary,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(22),
+                          ),
+                          elevation: 0,
+                        ),
+                        icon: const Icon(
+                          Icons.check_rounded,
+                          size: 18,
+                          color: Colors.white,
+                        ),
+                        label: const Text(
+                          'Simpan',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
+                        ),
+                        onPressed: () async {
+                          if (!formKey.currentState!.validate()) return;
+
+                          try {
+                            await _customerService.updateCustomer(
+                              id: _customer.id,
+                              name: nameController.text.trim(),
+                              email: emailController.text.trim().isEmpty
+                                  ? null
+                                  : emailController.text.trim(),
+                              phone: phoneController.text.trim().isEmpty
+                                  ? null
+                                  : phoneController.text.trim(),
+                              address: addressController.text
+                                      .trim()
+                                      .isEmpty
+                                  ? null
+                                  : addressController.text.trim(),
+                              company: companyController.text
+                                      .trim()
+                                      .isEmpty
+                                  ? null
+                                  : companyController.text.trim(),
+                              note: noteController.text.trim().isEmpty
+                                  ? null
+                                  : noteController.text.trim(),
+                            );
+
+                            setState(() {
+                              _customer = _customer.copyWith(
+                                name: nameController.text.trim(),
+                                email: emailController.text.trim().isEmpty
+                                    ? null
+                                    : emailController.text.trim(),
+                                phone: phoneController.text
+                                        .trim()
+                                        .isEmpty
+                                    ? null
+                                    : phoneController.text.trim(),
+                                address: addressController.text
+                                        .trim()
+                                        .isEmpty
+                                    ? null
+                                    : addressController.text.trim(),
+                                company: companyController.text
+                                        .trim()
+                                        .isEmpty
+                                    ? null
+                                    : companyController.text.trim(),
+                                note: noteController.text.trim().isEmpty
+                                    ? null
+                                    : noteController.text.trim(),
+                              );
+                            });
+
+                            if (context.mounted) {
+                              Navigator.pop<bool>(sheetContext, true);
+                            }
+                          } catch (e) {
+                            _showSnack('Error: $e');
+                          }
+                        },
+                      ),
+                    ],
+                  )
+                ],
               ),
             ),
           ),
@@ -312,36 +329,49 @@ class _CustomerDetailPageState extends State<CustomerDetailPage> {
     );
 
     if (result == true) {
-      // kalau mau kirim sinyal ke halaman sebelumnya bisa pakai Navigator.pop(result)
+      // kalau mau kirim sinyal ke halaman sebelumnya, Navigator.pop di CustomersPage
     }
   }
 
   Future<void> _confirmDelete() async {
     widget.onUserActivity();
 
+    final theme = Theme.of(context);
+
     final ok = await showDialog<bool>(
       context: context,
-      builder: (context) {
+      builder: (dialogContext) {
         return AlertDialog(
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(18),
           ),
-          title: const Text('Hapus Pelanggan'),
-          content: Text('Yakin menghapus ${_customer.name}?'),
+          title: Text(
+            'Hapus Pelanggan',
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          content: Text(
+            'Yakin menghapus ${_customer.name}?',
+            style: theme.textTheme.bodyMedium,
+          ),
           actions: [
-TextButton(
-  onPressed: () => Navigator.pop<bool>(context, false),
-  child: const Text(
-    'Batal',
-    style: TextStyle(
-      color: Colors.white,
-      fontWeight: FontWeight.w500,
-    ),
-  ),
-),
-
+            TextButton(
+              onPressed: () => Navigator.pop<bool>(dialogContext, false),
+              child: Text(
+                'Batal',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onSurface.withOpacity(0.6),
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
             ElevatedButton(
-              onPressed: () => Navigator.pop<bool>(context, true),
+              onPressed: () => Navigator.pop<bool>(dialogContext, true),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: theme.colorScheme.error,
+                foregroundColor: theme.colorScheme.onError,
+              ),
               child: const Text('Hapus'),
             ),
           ],
@@ -353,7 +383,7 @@ TextButton(
       try {
         await _customerService.deleteCustomer(_customer.id);
         if (mounted) {
-          Navigator.pop(context, true); // balik ke list dan refresh di sana
+          Navigator.pop(context, true);
         }
       } catch (e) {
         _showSnack('Gagal menghapus: $e');
@@ -367,19 +397,26 @@ TextButton(
   Widget build(BuildContext context) {
     widget.onUserActivity();
 
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final onSurface = theme.colorScheme.onSurface;
+
     final initials = _customer.name.isNotEmpty
         ? _customer.name.trim()[0].toUpperCase()
         : '?';
 
     return Scaffold(
-      backgroundColor: _primaryBlue,
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.white),
-        title: const Text(
+        iconTheme: IconThemeData(color: onSurface),
+        title: Text(
           'Detail Pelanggan',
-          style: TextStyle(color: Colors.white),
+          style: theme.textTheme.titleMedium?.copyWith(
+            color: onSurface,
+            fontWeight: FontWeight.w600,
+          ),
         ),
       ),
       body: SafeArea(
@@ -391,16 +428,17 @@ TextButton(
               Stack(
                 clipBehavior: Clip.none,
                 children: [
-                  // background putih besar
                   Container(
                     margin: const EdgeInsets.only(top: 50),
                     padding: const EdgeInsets.fromLTRB(16, 60, 16, 16),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: theme.cardColor,
                       borderRadius: BorderRadius.circular(24),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
+                          color: Colors.black.withOpacity(
+                            isDark ? 0.6 : 0.08,
+                          ),
                           blurRadius: 18,
                           offset: const Offset(0, 8),
                         )
@@ -411,18 +449,19 @@ TextButton(
                         const SizedBox(height: 4),
                         Text(
                           _customer.name,
-                          style: const TextStyle(
+                          style: theme.textTheme.titleMedium?.copyWith(
                             fontSize: 18,
                             fontWeight: FontWeight.w700,
+                            color: onSurface,
                           ),
                           textAlign: TextAlign.center,
                         ),
                         const SizedBox(height: 4),
                         Text(
                           _customer.email ?? 'Tidak ada email',
-                          style: const TextStyle(
+                          style: theme.textTheme.bodySmall?.copyWith(
                             fontSize: 12,
-                            color: Colors.grey,
+                            color: onSurface.withOpacity(0.7),
                           ),
                           textAlign: TextAlign.center,
                         ),
@@ -430,9 +469,9 @@ TextButton(
                           const SizedBox(height: 2),
                           Text(
                             _customer.phone!,
-                            style: const TextStyle(
+                            style: theme.textTheme.bodySmall?.copyWith(
                               fontSize: 12,
-                              color: Colors.grey,
+                              color: onSurface.withOpacity(0.7),
                             ),
                           ),
                         ],
@@ -442,7 +481,10 @@ TextButton(
                         Container(
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFF6F8FF),
+                            color: isDark
+                                ? theme.colorScheme.surfaceVariant
+                                : theme.colorScheme.surfaceVariant
+                                    .withOpacity(0.9),
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: Row(
@@ -450,20 +492,22 @@ TextButton(
                             children: [
                               _summaryItem(
                                 label: 'Total Belanja',
-                                value: _priceFormatter.format(_totalBelanja),
-                                icon: Icons.arrow_upward,
-                                iconColor: Colors.green,
+                                value:
+                                    _priceFormatter.format(_totalBelanja),
+                                icon: Icons.trending_up_rounded,
+                                iconColor: Colors.greenAccent,
                               ),
                               Container(
                                 width: 1,
                                 height: 40,
-                                color: Colors.grey.withOpacity(0.3),
+                                color: theme.dividerColor
+                                    .withOpacity(isDark ? 0.4 : 0.3),
                               ),
                               _summaryItem(
                                 label: 'Total Utang',
                                 value: _priceFormatter.format(_totalUtang),
-                                icon: Icons.arrow_downward,
-                                iconColor: Colors.redAccent,
+                                icon: Icons.trending_down_rounded,
+                                iconColor: Colors.orangeAccent,
                               ),
                             ],
                           ),
@@ -484,8 +528,7 @@ TextButton(
                               icon: Icons.history,
                               label: 'Riwayat',
                               onTap: () {
-                                // hanya scroll ke bawah
-                                // (user bisa lihat daftar transaksi di bawah)
+                                // scroll manual saja
                               },
                             ),
                             _quickAction(
@@ -498,15 +541,14 @@ TextButton(
 
                         const SizedBox(height: 24),
 
-                        // GENERAL INFO LIST (alamat, instansi, catatan)
                         Align(
                           alignment: Alignment.centerLeft,
                           child: Text(
                             'Informasi',
-                            style: TextStyle(
+                            style: theme.textTheme.labelMedium?.copyWith(
                               fontSize: 13,
                               fontWeight: FontWeight.w600,
-                              color: Colors.grey[700],
+                              color: onSurface.withOpacity(0.9),
                             ),
                           ),
                         ),
@@ -530,17 +572,17 @@ TextButton(
                     ),
                   ),
 
-                  // avatar bulat di atas card
+                  // avatar
                   Positioned(
                     top: 0,
                     left: 0,
                     right: 0,
                     child: CircleAvatar(
                       radius: 40,
-                      backgroundColor: Colors.white,
+                      backgroundColor: theme.scaffoldBackgroundColor,
                       child: CircleAvatar(
                         radius: 35,
-                        backgroundColor: _primaryBlue,
+                        backgroundColor: theme.colorScheme.primary,
                         child: Text(
                           initials,
                           style: const TextStyle(
@@ -561,19 +603,19 @@ TextButton(
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
+                  Text(
                     'Riwayat Transaksi',
-                    style: TextStyle(
+                    style: theme.textTheme.titleSmall?.copyWith(
                       fontSize: 15,
                       fontWeight: FontWeight.w700,
-                      color: Colors.white,
+                      color: onSurface,
                     ),
                   ),
                   Text(
                     '$_jumlahTransaksi transaksi',
-                    style: const TextStyle(
+                    style: theme.textTheme.bodySmall?.copyWith(
                       fontSize: 12,
-                      color: Colors.white,
+                      color: onSurface.withOpacity(0.7),
                     ),
                   ),
                 ],
@@ -581,20 +623,23 @@ TextButton(
               const SizedBox(height: 8),
 
               _isLoadingSales
-                  ? const Padding(
-                      padding: EdgeInsets.all(16),
+                  ? Padding(
+                      padding: const EdgeInsets.all(16),
                       child: CircularProgressIndicator(
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                        valueColor:
+                            AlwaysStoppedAnimation<Color>(
+                          theme.colorScheme.primary,
+                        ),
                       ),
                     )
                   : _sales.isEmpty
-                      ? const Padding(
-                          padding: EdgeInsets.all(16),
+                      ? Padding(
+                          padding: const EdgeInsets.all(16),
                           child: Text(
                             'Belum ada transaksi untuk pelanggan ini.',
-                            style: TextStyle(
+                            style: theme.textTheme.bodySmall?.copyWith(
                               fontSize: 13,
-                              color: Colors.white,
+                              color: onSurface.withOpacity(0.7),
                             ),
                           ),
                         )
@@ -609,31 +654,36 @@ TextButton(
                                 ? (sale.totalAmount - sale.paidAmount)
                                 : 0;
 
-                            final Color chipBg =
-                                isUtang ? const Color(0xFFFFF3E0) : const Color(0xFFE8F5E9);
-                            final Color chipText =
-                                isUtang ? const Color(0xFFF57C00) : const Color(0xFF2E7D32);
-                            final IconData statusIcon =
-                                isUtang ? Icons.schedule_outlined : Icons.check_circle_rounded;
-                            final Color statusIconBg =
-                                isUtang ? const Color(0xFFFFCC80) : const Color(0xFFA5D6A7);
+                            final Color chipBg = isUtang
+                                ? const Color(0xFFFFF3E0)
+                                : const Color(0xFFE8F5E9);
+                            final Color chipText = isUtang
+                                ? const Color(0xFFF57C00)
+                                : const Color(0xFF2E7D32);
+                            final IconData statusIcon = isUtang
+                                ? Icons.schedule_outlined
+                                : Icons.check_circle_rounded;
+                            final Color statusIconBg = isUtang
+                                ? const Color(0xFFFFCC80)
+                                : const Color(0xFFA5D6A7);
 
                             return Container(
                               margin: const EdgeInsets.only(bottom: 10),
                               decoration: BoxDecoration(
-                                color: Colors.white,
+                                color: theme.cardColor,
                                 borderRadius: BorderRadius.circular(18),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.black.withOpacity(0.08),
-                                    blurRadius: 12,
-                                    offset: const Offset(0, 4),
+                                    color: Colors.black.withOpacity(
+                                      isDark ? 0.35 : 0.06,
+                                    ),
+                                    blurRadius: 14,
+                                    offset: const Offset(0, 5),
                                   )
                                 ],
                               ),
                               child: Row(
                                 children: [
-                                  // strip warna kiri
                                   Container(
                                     width: 6,
                                     height: 90,
@@ -659,8 +709,9 @@ TextButton(
                                   ),
                                   Expanded(
                                     child: Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 12, vertical: 10),
+                                      padding:
+                                          const EdgeInsets.symmetric(
+                                              horizontal: 12, vertical: 10),
                                       child: Column(
                                         crossAxisAlignment:
                                             CrossAxisAlignment.start,
@@ -695,11 +746,16 @@ TextButton(
                                                       children: [
                                                         Text(
                                                           _priceFormatter
-                                                              .format(sale.totalAmount),
-                                                          style: const TextStyle(
+                                                              .format(sale
+                                                                  .totalAmount),
+                                                          style: theme
+                                                              .textTheme
+                                                              .bodyMedium
+                                                              ?.copyWith(
                                                             fontSize: 14,
                                                             fontWeight:
                                                                 FontWeight.bold,
+                                                            color: onSurface,
                                                           ),
                                                         ),
                                                         Container(
@@ -722,7 +778,8 @@ TextButton(
                                                               Icon(
                                                                 statusIcon,
                                                                 size: 14,
-                                                                color: chipText,
+                                                                color:
+                                                                    chipText,
                                                               ),
                                                               const SizedBox(
                                                                   width: 4),
@@ -730,7 +787,8 @@ TextButton(
                                                                 isUtang
                                                                     ? 'Utang'
                                                                     : 'Lunas',
-                                                                style: TextStyle(
+                                                                style:
+                                                                    TextStyle(
                                                                   fontSize: 11,
                                                                   fontWeight:
                                                                       FontWeight
@@ -746,11 +804,14 @@ TextButton(
                                                     ),
                                                     const SizedBox(height: 4),
                                                     Text(
-                                                      _dateFormatter
-                                                          .format(sale.createdAt),
-                                                      style: const TextStyle(
+                                                      _dateFormatter.format(
+                                                          sale.createdAt),
+                                                      style: theme.textTheme
+                                                          .bodySmall
+                                                          ?.copyWith(
                                                         fontSize: 11,
-                                                        color: Colors.grey,
+                                                        color: onSurface
+                                                            .withOpacity(0.7),
                                                       ),
                                                     ),
                                                   ],
@@ -761,16 +822,21 @@ TextButton(
                                           const SizedBox(height: 4),
                                           Text(
                                             'Dibayar: ${_priceFormatter.format(sale.paidAmount)}',
-                                            style: const TextStyle(
+                                            style: theme.textTheme.bodySmall
+                                                ?.copyWith(
                                               fontSize: 11,
+                                              color: onSurface.withOpacity(0.7),
                                             ),
                                           ),
                                           if (isUtang && sisaUtang > 0)
                                             Text(
                                               'Sisa utang: ${_priceFormatter.format(sisaUtang)}',
-                                              style: const TextStyle(
+                                              style: theme
+                                                  .textTheme.bodySmall
+                                                  ?.copyWith(
                                                 fontSize: 11,
-                                                color: Color(0xFFD84315),
+                                                color:
+                                                    const Color(0xFFFF7043),
                                                 fontWeight: FontWeight.w600,
                                               ),
                                             ),
@@ -798,6 +864,9 @@ TextButton(
     required IconData icon,
     required Color iconColor,
   }) {
+    final theme = Theme.of(context);
+    final onSurface = theme.colorScheme.onSurface;
+
     return Expanded(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -808,9 +877,9 @@ TextButton(
               const SizedBox(width: 4),
               Text(
                 label,
-                style: const TextStyle(
+                style: theme.textTheme.bodySmall?.copyWith(
                   fontSize: 11,
-                  color: Colors.grey,
+                  color: onSurface.withOpacity(0.7),
                 ),
               ),
             ],
@@ -818,9 +887,10 @@ TextButton(
           const SizedBox(height: 4),
           Text(
             value,
-            style: const TextStyle(
+            style: theme.textTheme.bodyMedium?.copyWith(
               fontSize: 14,
               fontWeight: FontWeight.w700,
+              color: onSurface,
             ),
           ),
         ],
@@ -833,6 +903,9 @@ TextButton(
     required String label,
     required VoidCallback onTap,
   }) {
+    final theme = Theme.of(context);
+    final onSurface = theme.colorScheme.onSurface;
+
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(16),
@@ -841,20 +914,21 @@ TextButton(
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: _primaryBlue.withOpacity(0.08),
+              color: theme.colorScheme.primary.withOpacity(0.15),
               borderRadius: BorderRadius.circular(16),
             ),
             child: Icon(
               icon,
               size: 20,
-              color: _primaryBlue,
+              color: theme.colorScheme.primary,
             ),
           ),
           const SizedBox(height: 4),
           Text(
             label,
-            style: const TextStyle(
+            style: theme.textTheme.bodySmall?.copyWith(
               fontSize: 11,
+              color: onSurface.withOpacity(0.7),
             ),
           ),
         ],
@@ -867,16 +941,25 @@ TextButton(
     required String value,
     required IconData icon,
   }) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final onSurface = theme.colorScheme.onSurface;
+
     return Container(
       margin: const EdgeInsets.only(top: 6),
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.grey.withOpacity(0.15)),
+        border: Border.all(
+          color: theme.dividerColor.withOpacity(isDark ? 0.4 : 0.3),
+        ),
+        color: isDark
+            ? theme.colorScheme.surfaceVariant
+            : theme.colorScheme.surface,
       ),
       child: Row(
         children: [
-          Icon(icon, size: 18, color: _primaryBlue),
+          Icon(icon, size: 18, color: theme.colorScheme.primary),
           const SizedBox(width: 10),
           Expanded(
             child: Column(
@@ -884,16 +967,17 @@ TextButton(
               children: [
                 Text(
                   title,
-                  style: const TextStyle(
+                  style: theme.textTheme.bodySmall?.copyWith(
                     fontSize: 11,
-                    color: Colors.grey,
+                    color: onSurface.withOpacity(0.7),
                   ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   value,
-                  style: const TextStyle(
+                  style: theme.textTheme.bodyMedium?.copyWith(
                     fontSize: 13,
+                    color: onSurface,
                   ),
                 ),
               ],
@@ -904,7 +988,6 @@ TextButton(
     );
   }
 
-  /// Field builder khusus untuk dialog edit (underline + icon + label kecil)
   Widget _editField({
     required String label,
     required TextEditingController controller,
@@ -912,38 +995,42 @@ TextButton(
     String? Function(String?)? validator,
     TextInputType? keyboardType,
   }) {
+    final theme = Theme.of(context);
+    final onSurface = theme.colorScheme.onSurface;
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: TextFormField(
         controller: controller,
         keyboardType: keyboardType,
         validator: validator,
-        style: const TextStyle(
+        style: theme.textTheme.bodyMedium?.copyWith(
           fontSize: 14,
+          color: onSurface,
         ),
         decoration: InputDecoration(
           prefixIcon: icon != null
               ? Icon(
                   icon,
                   size: 18,
-                  color: _primaryBlue,
+                  color: theme.colorScheme.primary,
                 )
               : null,
           labelText: label,
-          labelStyle: const TextStyle(
+          labelStyle: theme.textTheme.labelMedium?.copyWith(
             fontSize: 12,
-            color: Color(0xFF8C8CA1),
+            color: onSurface.withOpacity(0.6),
           ),
           floatingLabelBehavior: FloatingLabelBehavior.always,
-          enabledBorder: const UnderlineInputBorder(
+          enabledBorder: UnderlineInputBorder(
             borderSide: BorderSide(
-              color: Color(0xFFDDDDFF),
+              color: onSurface.withOpacity(0.3),
               width: 1,
             ),
           ),
-          focusedBorder: const UnderlineInputBorder(
+          focusedBorder: UnderlineInputBorder(
             borderSide: BorderSide(
-              color: _primaryBlue,
+              color: theme.colorScheme.primary,
               width: 1.4,
             ),
           ),

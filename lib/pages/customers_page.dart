@@ -79,29 +79,54 @@ class _CustomersPageState extends State<CustomersPage> {
     );
   }
 
-  // ============ FORM TAMBAH / EDIT ============
+  // ============ STYLE HELPER (mirip ProductsPage) ============
 
-  InputDecoration _inputDecoration(String label) {
+  InputDecoration _inputDecoration(String label, IconData icon) {
     return InputDecoration(
       labelText: label,
       labelStyle: const TextStyle(fontSize: 13, color: Colors.grey),
+      prefixIcon: Icon(icon, color: _primaryBlue),
       filled: true,
       fillColor: const Color(0xFFF5F7FF),
       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(16),
         borderSide: const BorderSide(color: Color(0xFFE0E3FF)),
       ),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(16),
         borderSide: const BorderSide(color: Color(0xFFE0E3FF)),
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(16),
         borderSide: const BorderSide(color: _primaryBlue, width: 1.5),
       ),
     );
   }
+
+  ButtonStyle get _blueBtn => ElevatedButton.styleFrom(
+        backgroundColor: _primaryBlue,
+        foregroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+        elevation: 0,
+      );
+
+  TextButton _ghostBtn(String text, VoidCallback onPressed) => TextButton(
+        onPressed: onPressed,
+        style: TextButton.styleFrom(
+          foregroundColor: _primaryBlue,
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+        ),
+        child: Text(
+          text,
+          style: const TextStyle(fontWeight: FontWeight.w600),
+        ),
+      );
+
+  // ============ FORM TAMBAH / EDIT (BOTTOM SHEET CANTIK) ============
 
   Future<void> _openForm({Customer? customer}) async {
     widget.onUserActivity();
@@ -118,137 +143,156 @@ class _CustomersPageState extends State<CustomersPage> {
     final formKey = GlobalKey<FormState>();
     final isEdit = customer != null;
 
-    final bool? result = await showDialog<bool>(
+    final bool? result = await showModalBottomSheet<bool>(
       context: context,
-      barrierDismissible: false,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
       builder: (context) {
-        return Dialog(
-          insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(22),
+        return Padding(
+          padding: EdgeInsets.only(
+            left: 16,
+            right: 16,
+            top: 16,
+            bottom: MediaQuery.of(context).viewInsets.bottom + 16,
           ),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxHeight: 520),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // header
-                Container(
-                  width: double.infinity,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                  decoration: BoxDecoration(
-                    color: _primaryBlue,
-                    borderRadius: const BorderRadius.vertical(
-                      top: Radius.circular(22),
+          child: SingleChildScrollView(
+            child: Form(
+              key: formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // drag handle
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      margin: const EdgeInsets.only(bottom: 12),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[300],
+                        borderRadius: BorderRadius.circular(999),
+                      ),
                     ),
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  // header icon + title
+                  Row(
                     children: [
-                      Text(
-                        isEdit ? 'Edit Pelanggan' : 'Tambah Pelanggan',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: _primaryBlue.withOpacity(0.12),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.person_outline_rounded,
+                          color: _primaryBlue,
                         ),
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        isEdit
-                            ? 'Perbarui data pelanggan kamu.'
-                            : 'Lengkapi data pelanggan baru.',
-                        style: const TextStyle(
-                          color: Colors.white70,
-                          fontSize: 12,
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              isEdit ? 'Edit Pelanggan' : 'Tambah Pelanggan',
+                              style: const TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              isEdit
+                                  ? 'Perbarui data pelanggan kamu.'
+                                  : 'Lengkapi data pelanggan baru.',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey[600],
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ],
                   ),
-                ),
 
-                Expanded(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
-                    child: Form(
-                      key: formKey,
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          TextFormField(
-                            controller: nameController,
-                            decoration: _inputDecoration('Nama lengkap'),
-                            validator: (v) =>
-                                v == null || v.isEmpty ? 'Nama wajib diisi' : null,
-                          ),
-                          const SizedBox(height: 12),
-                          TextFormField(
-                            controller: phoneController,
-                            keyboardType: TextInputType.phone,
-                            decoration:
-                                _inputDecoration('No. Telepon (opsional)'),
-                          ),
-                          const SizedBox(height: 12),
-                          TextFormField(
-                            controller: emailController,
-                            keyboardType: TextInputType.emailAddress,
-                            decoration:
-                                _inputDecoration('Email (opsional)'),
-                          ),
-                          const SizedBox(height: 12),
-                          TextFormField(
-                            controller: addressController,
-                            decoration:
-                                _inputDecoration('Alamat (opsional)'),
-                          ),
-                          const SizedBox(height: 12),
-                          TextFormField(
-                            controller: companyController,
-                            decoration: _inputDecoration(
-                                'Instansi/Perusahaan (opsional)'),
-                          ),
-                          const SizedBox(height: 12),
-                          TextFormField(
-                            controller: noteController,
-                            maxLines: 2,
-                            decoration:
-                                _inputDecoration('Catatan (opsional)'),
-                          ),
-                        ],
-                      ),
+                  const SizedBox(height: 18),
+
+                  // Nama
+                  TextFormField(
+                    controller: nameController,
+                    decoration:
+                        _inputDecoration('Nama lengkap', Icons.badge_outlined),
+                    validator: (v) =>
+                        v == null || v.isEmpty ? 'Nama wajib diisi' : null,
+                  ),
+                  const SizedBox(height: 12),
+
+                  // No telepon
+                  TextFormField(
+                    controller: phoneController,
+                    keyboardType: TextInputType.phone,
+                    decoration: _inputDecoration(
+                      'No. Telepon (opsional)',
+                      Icons.phone_android_rounded,
                     ),
                   ),
-                ),
+                  const SizedBox(height: 12),
 
-                // actions
-                Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
+                  // Email
+                  TextFormField(
+                    controller: emailController,
+                    keyboardType: TextInputType.emailAddress,
+                    decoration: _inputDecoration(
+                      'Email (opsional)',
+                      Icons.email_outlined,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+
+                  // Alamat
+                  TextFormField(
+                    controller: addressController,
+                    decoration: _inputDecoration(
+                      'Alamat (opsional)',
+                      Icons.home_outlined,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+
+                  // Instansi / perusahaan
+                  TextFormField(
+                    controller: companyController,
+                    decoration: _inputDecoration(
+                      'Instansi/Perusahaan (opsional)',
+                      Icons.business_center_outlined,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+
+                  // Catatan
+                  TextFormField(
+                    controller: noteController,
+                    maxLines: 2,
+                    decoration: _inputDecoration(
+                      'Catatan (opsional)',
+                      Icons.notes_rounded,
+                    ),
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      TextButton(
-                        onPressed: () =>
-                            Navigator.pop<bool>(context, false),
-                        child: const Text(
-                          'Batal',
-                          style: TextStyle(
-                            color: Colors.grey, // ← warna abu
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
+                      _ghostBtn('Batal', () {
+                        Navigator.pop<bool>(context, false);
+                      }),
                       ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: _primaryBlue,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 20, vertical: 10),
-                        ),
+                        style: _blueBtn,
                         onPressed: () async {
                           if (!formKey.currentState!.validate()) return;
 
@@ -304,15 +348,14 @@ class _CustomersPageState extends State<CustomersPage> {
                         child: Text(
                           isEdit ? 'Simpan' : 'Tambah',
                           style: const TextStyle(
-                            color: Colors.white, // ← teks tombol tambah putih
                             fontWeight: FontWeight.w600,
                           ),
                         ),
                       ),
                     ],
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         );
@@ -342,7 +385,7 @@ class _CustomersPageState extends State<CustomersPage> {
               child: const Text(
                 'Batal',
                 style: TextStyle(
-                  color: Colors.grey, // ← warna abu
+                  color: Colors.grey,
                 ),
               ),
             ),
@@ -365,218 +408,232 @@ class _CustomersPageState extends State<CustomersPage> {
     }
   }
 
-  // ============ UI ============
+  // ============ UI LIST ============
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     if (_isLoading && _customers.isEmpty) {
       return const Center(child: CircularProgressIndicator());
     }
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF3F6FF),
-      body: RefreshIndicator(
-        onRefresh: _loadCustomers,
-        child: ListView.builder(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 90),
-          itemCount: _customers.isEmpty ? 1 : _customers.length + 1,
-          itemBuilder: (context, index) {
-            if (index == 0) {
-              return _buildHeader();
-            }
-
-            if (_customers.isEmpty) {
-              return const Padding(
-                padding: EdgeInsets.only(top: 120),
-                child: Center(child: Text('Belum ada pelanggan')),
-              );
-            }
-
-            final c = _customers[index - 1];
-            final initials = c.name.isNotEmpty
-                ? c.name.trim()[0].toUpperCase()
-                : '?';
-
-            final key = c.name.toLowerCase();
-            final sisaUtang = _utangPerCustomer[key] ?? 0;
-
-            String subtitle = '';
-            if (c.phone != null && c.phone!.isNotEmpty) {
-              subtitle = c.phone!;
-            } else if (c.email != null && c.email!.isNotEmpty) {
-              subtitle = c.email!;
-            }
-
-            return GestureDetector(
-              onTap: () async {
-                widget.onUserActivity();
-                final changed = await Navigator.push<bool>(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => CustomerDetailPage(
-                      customer: c,
-                      onUserActivity: widget.onUserActivity,
-                    ),
-                  ),
-                );
-                if (changed == true) {
-                  _loadCustomers();
+      backgroundColor: Colors.transparent,
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: isDark
+                ? [const Color(0xFF020617), const Color(0xFF020617)]
+                : [_primaryBlue.withOpacity(0.08), Colors.white],
+          ),
+        ),
+        child: SafeArea(
+          child: RefreshIndicator(
+            onRefresh: _loadCustomers,
+            child: ListView.builder(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 90),
+              itemCount: _customers.isEmpty ? 1 : _customers.length + 1,
+              itemBuilder: (context, index) {
+                if (index == 0) {
+                  return _buildHeader(theme, isDark);
                 }
-              },
-              onLongPress: () => _confirmDelete(c),
-              child: Container(
-                margin: const EdgeInsets.only(top: 10),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(18),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.04),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    )
-                  ],
-                ),
-                child: Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color: _primaryBlue.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Center(
-                          child: Text(
-                            initials,
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black87,
-                            ),
-                          ),
+
+                if (_customers.isEmpty) {
+                  return const Padding(
+                    padding: EdgeInsets.only(top: 120),
+                    child: Center(child: Text('Belum ada pelanggan')),
+                  );
+                }
+
+                final c = _customers[index - 1];
+                final initials =
+                    c.name.isNotEmpty ? c.name.trim()[0].toUpperCase() : '?';
+
+                final key = c.name.toLowerCase();
+                final sisaUtang = _utangPerCustomer[key] ?? 0;
+
+                String subtitle = '';
+                if (c.phone != null && c.phone!.isNotEmpty) {
+                  subtitle = c.phone!;
+                } else if (c.email != null && c.email!.isNotEmpty) {
+                  subtitle = c.email!;
+                }
+
+                return GestureDetector(
+                  onTap: () async {
+                    widget.onUserActivity();
+                    final changed = await Navigator.push<bool>(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => CustomerDetailPage(
+                          customer: c,
+                          onUserActivity: widget.onUserActivity,
                         ),
                       ),
-                      const SizedBox(width: 12),
-
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              c.name,
-                              style: const TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            const SizedBox(height: 2),
-                            if (subtitle.isNotEmpty)
-                              Text(
-                                subtitle,
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.grey,
-                                ),
-                              ),
-                            if (c.company != null &&
-                                c.company!.trim().isNotEmpty)
-                              Text(
-                                c.company!,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  fontSize: 11,
-                                  color: Colors.grey,
-                                ),
-                              ),
-                            if ((c.note ?? '').trim().isNotEmpty)
-                              Text(
-                                c.note!,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  fontSize: 11,
-                                  color: Colors.grey,
-                                ),
-                              ),
-                          ],
-                        ),
-                      ),
-
-                      const SizedBox(width: 8),
-
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        mainAxisAlignment: MainAxisAlignment.center,
+                    );
+                    if (changed == true) {
+                      _loadCustomers();
+                    }
+                  },
+                  onLongPress: () => _confirmDelete(c),
+                  child: Container(
+                    margin: const EdgeInsets.only(top: 10),
+                    decoration: BoxDecoration(
+                      color: theme.cardColor,
+                      borderRadius: BorderRadius.circular(18),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.06),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        )
+                      ],
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 10),
+                      child: Row(
                         children: [
-                          if (sisaUtang > 0)
-                            Text(
-                              _priceFormatter.format(sisaUtang),
-                              style: const TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.bold,
-                                color: Color(0xFFD84315),
-                              ),
-                            )
-                          else
-                            const Text(
-                              'Lunas',
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                                color: Color(0xFF2E7D32),
-                              ),
+                          Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: _primaryBlue.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(12),
                             ),
-                          const SizedBox(height: 2),
-                          Text(
-                            sisaUtang > 0 ? 'Sisa utang' : 'Tidak ada utang',
-                            style: const TextStyle(
-                              fontSize: 10,
-                              color: Colors.grey,
+                            child: Center(
+                              child: Text(
+                                initials,
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black87,
+                                ),
+                              ),
                             ),
                           ),
-                          IconButton(
-                            icon: const Icon(
-                              Icons.more_vert,
-                              size: 18,
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  c.name,
+                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                if (subtitle.isNotEmpty)
+                                  Text(
+                                    subtitle,
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      fontSize: 12,
+                                      color: Colors.grey,
+                                    ),
+                                  ),
+                                if (c.company != null &&
+                                    c.company!.trim().isNotEmpty)
+                                  Text(
+                                    c.company!,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style:
+                                        theme.textTheme.bodySmall?.copyWith(
+                                      fontSize: 11,
+                                      color: Colors.grey,
+                                    ),
+                                  ),
+                                if ((c.note ?? '').trim().isNotEmpty)
+                                  Text(
+                                    c.note!,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style:
+                                        theme.textTheme.bodySmall?.copyWith(
+                                      fontSize: 11,
+                                      color: Colors.grey,
+                                    ),
+                                  ),
+                              ],
                             ),
-                            onPressed: () {
-                              _showCustomerMenu(c);
-                            },
+                          ),
+                          const SizedBox(width: 8),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              if (sisaUtang > 0)
+                                Text(
+                                  _priceFormatter.format(sisaUtang),
+                                  style: const TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.bold,
+                                    color: Color(0xFFD84315),
+                                  ),
+                                )
+                              else
+                                const Text(
+                                  'Lunas',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    color: Color(0xFF2E7D32),
+                                  ),
+                                ),
+                              const SizedBox(height: 2),
+                              Text(
+                                sisaUtang > 0
+                                    ? 'Sisa utang'
+                                    : 'Tidak ada utang',
+                                style: const TextStyle(
+                                  fontSize: 10,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                              IconButton(
+                                icon: const Icon(
+                                  Icons.more_vert,
+                                  size: 18,
+                                ),
+                                onPressed: () {
+                                  _showCustomerMenu(c);
+                                },
+                              ),
+                            ],
                           ),
                         ],
                       ),
-                    ],
+                    ),
                   ),
-                ),
-              ),
-            );
-          },
+                );
+              },
+            ),
+          ),
         ),
       ),
-
       floatingActionButton: FloatingActionButton(
         backgroundColor: _primaryBlue,
         onPressed: () => _openForm(),
         child: const Icon(
           Icons.add,
-          color: Colors.white, // ← icon + warna putih
+          color: Colors.white,
         ),
       ),
     );
   }
 
   // Header card
-  Widget _buildHeader() {
+  Widget _buildHeader(ThemeData theme, bool isDark) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const SizedBox(height: 12),
-
         Container(
           width: double.infinity,
           padding: const EdgeInsets.all(16),
@@ -627,44 +684,44 @@ class _CustomersPageState extends State<CustomersPage> {
             ],
           ),
         ),
-
         const SizedBox(height: 18),
-        const Text(
+        Text(
           'Daftar Pelanggan',
-          style: TextStyle(
+          style: theme.textTheme.titleMedium?.copyWith(
             fontSize: 14,
             fontWeight: FontWeight.w600,
+            color: isDark ? Colors.white : Colors.black87,
           ),
         ),
       ],
     );
   }
 
-  Widget _headerStat({required String label, required String value}) {
-    return Expanded(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            style: const TextStyle(
-              fontSize: 11,
-              color: Colors.white70,
-            ),
+ Widget _headerStat({required String label, required String value}) {
+  return Expanded(
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 11,
+            color: Colors.white70,
           ),
-          const SizedBox(height: 2),
-          Text(
-            value,
-            style: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: Colors.white,
-            ),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          value,
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: Colors.white,
           ),
-        ],
-      ),
-    );
-  }
+        ),
+      ],
+    ),
+  );
+}
 
   void _showCustomerMenu(Customer c) {
     showModalBottomSheet(

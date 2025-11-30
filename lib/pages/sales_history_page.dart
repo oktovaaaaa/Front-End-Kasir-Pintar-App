@@ -104,18 +104,25 @@ class _SalesHistoryPageState extends State<SalesHistoryPage> {
     final sisaUtang = _sisaUtang(sale);
     final isUtang = sale.status == 'kasbon';
 
+    final rootTheme = Theme.of(context);
+    final isDark = rootTheme.brightness == Brightness.dark;
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
+      backgroundColor: isDark ? const Color(0xAA000000) : Colors.black54,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      builder: (context) {
+      builder: (sheetContext) {
+        final theme = Theme.of(sheetContext);
+        final cardColor = theme.cardColor;
+        final onSurface = theme.colorScheme.onSurface;
+
         return Container(
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          decoration: BoxDecoration(
+            color: cardColor,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
           ),
           child: SafeArea(
             top: false,
@@ -143,7 +150,7 @@ class _SalesHistoryPageState extends State<SalesHistoryPage> {
                           height: 4,
                           margin: const EdgeInsets.only(bottom: 12),
                           decoration: BoxDecoration(
-                            color: Colors.grey[400],
+                            color: theme.dividerColor.withOpacity(0.6),
                             borderRadius: BorderRadius.circular(2),
                           ),
                         ),
@@ -170,19 +177,20 @@ class _SalesHistoryPageState extends State<SalesHistoryPage> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Text(
+                                Text(
                                   'Detail Transaksi',
-                                  style: TextStyle(
+                                  style: theme.textTheme.titleMedium?.copyWith(
                                     fontSize: 18,
                                     fontWeight: FontWeight.bold,
+                                    color: onSurface,
                                   ),
                                 ),
                                 const SizedBox(height: 2),
                                 Text(
                                   '#${sale.id}',
-                                  style: const TextStyle(
+                                  style: theme.textTheme.bodySmall?.copyWith(
                                     fontSize: 12,
-                                    color: Colors.grey,
+                                    color: onSurface.withOpacity(0.6),
                                   ),
                                 ),
                                 const SizedBox(height: 6),
@@ -193,9 +201,10 @@ class _SalesHistoryPageState extends State<SalesHistoryPage> {
                                     Expanded(
                                       child: Text(
                                         _dateFormatter.format(sale.createdAt),
-                                        style: const TextStyle(
+                                        style: theme.textTheme.bodySmall
+                                            ?.copyWith(
                                           fontSize: 12,
-                                          color: Colors.grey,
+                                          color: onSurface.withOpacity(0.7),
                                         ),
                                       ),
                                     ),
@@ -204,7 +213,8 @@ class _SalesHistoryPageState extends State<SalesHistoryPage> {
                                           horizontal: 10, vertical: 4),
                                       decoration: BoxDecoration(
                                         color: _statusColorBg(sale),
-                                        borderRadius: BorderRadius.circular(20),
+                                        borderRadius:
+                                            BorderRadius.circular(20),
                                       ),
                                       child: Row(
                                         mainAxisSize: MainAxisSize.min,
@@ -243,33 +253,37 @@ class _SalesHistoryPageState extends State<SalesHistoryPage> {
                           padding: const EdgeInsets.symmetric(
                               horizontal: 12, vertical: 10),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFF9FAFF),
+                            color: theme.colorScheme.surfaceVariant
+                                .withOpacity(0.6),
                             borderRadius: BorderRadius.circular(14),
                           ),
                           child: Row(
                             children: [
-                              const Icon(
+                              Icon(
                                 Icons.person_outline_rounded,
                                 size: 18,
-                                color: Colors.grey,
+                                color: onSurface.withOpacity(0.7),
                               ),
                               const SizedBox(width: 8),
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    const Text(
+                                    Text(
                                       'Pelanggan',
-                                      style: TextStyle(
+                                      style: theme.textTheme.bodySmall
+                                          ?.copyWith(
                                         fontSize: 11,
-                                        color: Colors.grey,
+                                        color: onSurface.withOpacity(0.6),
                                       ),
                                     ),
                                     Text(
                                       sale.customerName!,
-                                      style: const TextStyle(
+                                      style: theme.textTheme.bodyMedium
+                                          ?.copyWith(
                                         fontSize: 13,
                                         fontWeight: FontWeight.w600,
+                                        color: onSurface,
                                       ),
                                     ),
                                   ],
@@ -282,14 +296,14 @@ class _SalesHistoryPageState extends State<SalesHistoryPage> {
                       ],
 
                       // RINGKASAN
-                      _buildSectionTitle('Ringkasan transaksi'),
+                      _buildSectionTitle('Ringkasan transaksi', theme),
                       const SizedBox(height: 6),
                       Container(
                         width: double.infinity,
                         padding: const EdgeInsets.symmetric(
                             horizontal: 12, vertical: 12),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFF3F6FF),
+                          color: theme.colorScheme.primary.withOpacity(0.06),
                           borderRadius: BorderRadius.circular(14),
                         ),
                         child: Row(
@@ -298,19 +312,21 @@ class _SalesHistoryPageState extends State<SalesHistoryPage> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  const Text(
+                                  Text(
                                     'Total belanja',
-                                    style: TextStyle(
+                                    style: theme.textTheme.bodySmall?.copyWith(
                                       fontSize: 12,
-                                      color: Colors.grey,
+                                      color: onSurface.withOpacity(0.7),
                                     ),
                                   ),
                                   const SizedBox(height: 2),
                                   Text(
                                     _priceFormatter.format(sale.totalAmount),
-                                    style: const TextStyle(
+                                    style: theme.textTheme.titleMedium
+                                        ?.copyWith(
                                       fontSize: 15,
                                       fontWeight: FontWeight.bold,
+                                      color: onSurface,
                                     ),
                                   ),
                                 ],
@@ -320,25 +336,26 @@ class _SalesHistoryPageState extends State<SalesHistoryPage> {
                             Container(
                               width: 1,
                               height: 32,
-                              color: Colors.grey.shade300,
+                              color: theme.dividerColor,
                             ),
                             const SizedBox(width: 12),
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Text(
+                                Text(
                                   'Total barang',
-                                  style: TextStyle(
+                                  style: theme.textTheme.bodySmall?.copyWith(
                                     fontSize: 12,
-                                    color: Colors.grey,
+                                    color: onSurface.withOpacity(0.7),
                                   ),
                                 ),
                                 const SizedBox(height: 2),
                                 Text(
                                   '$totalQty pcs',
-                                  style: const TextStyle(
+                                  style: theme.textTheme.bodyMedium?.copyWith(
                                     fontSize: 13,
                                     fontWeight: FontWeight.w600,
+                                    color: onSurface,
                                   ),
                                 ),
                               ],
@@ -350,13 +367,14 @@ class _SalesHistoryPageState extends State<SalesHistoryPage> {
                       const SizedBox(height: 16),
 
                       // LIST ITEM
-                      _buildSectionTitle('Detail barang'),
+                      _buildSectionTitle('Detail barang', theme),
                       const SizedBox(height: 6),
                       Container(
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(14),
                           border: Border.all(
-                            color: const Color(0xFFE0E3F0),
+                            color:
+                                theme.dividerColor.withOpacity(0.8),
                           ),
                         ),
                         child: ListView.separated(
@@ -398,25 +416,30 @@ class _SalesHistoryPageState extends State<SalesHistoryPage> {
                                     children: [
                                       Text(
                                         item.productName,
-                                        style: const TextStyle(
+                                        style: theme.textTheme.bodyMedium
+                                            ?.copyWith(
                                           fontSize: 14,
                                           fontWeight: FontWeight.w600,
+                                          color: onSurface,
                                         ),
                                       ),
                                       const SizedBox(height: 2),
                                       Text(
                                         '${item.qty}x  ${_priceFormatter.format(item.price)}',
-                                        style: const TextStyle(
+                                        style: theme.textTheme.bodySmall
+                                            ?.copyWith(
                                           fontSize: 12,
-                                          color: Colors.grey,
+                                          color: onSurface.withOpacity(0.7),
                                         ),
                                       ),
                                       const SizedBox(height: 2),
                                       Text(
                                         _priceFormatter.format(item.subtotal),
-                                        style: const TextStyle(
+                                        style: theme.textTheme.bodyMedium
+                                            ?.copyWith(
                                           fontSize: 12,
                                           fontWeight: FontWeight.w600,
+                                          color: onSurface,
                                         ),
                                       ),
                                     ],
@@ -431,14 +454,15 @@ class _SalesHistoryPageState extends State<SalesHistoryPage> {
                       const SizedBox(height: 16),
 
                       // PEMBAYARAN
-                      _buildSectionTitle('Rincian pembayaran'),
+                      _buildSectionTitle('Rincian pembayaran', theme),
                       const SizedBox(height: 6),
                       Container(
                         width: double.infinity,
                         padding: const EdgeInsets.symmetric(
                             horizontal: 12, vertical: 10),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFFAFAFA),
+                          color: theme.colorScheme.surfaceVariant
+                              .withOpacity(0.5),
                           borderRadius: BorderRadius.circular(14),
                         ),
                         child: Column(
@@ -447,15 +471,17 @@ class _SalesHistoryPageState extends State<SalesHistoryPage> {
                               mainAxisAlignment:
                                   MainAxisAlignment.spaceBetween,
                               children: [
-                                const Text(
+                                Text(
                                   'Total Belanja',
-                                  style: TextStyle(fontSize: 13),
+                                  style: theme.textTheme.bodyMedium
+                                      ?.copyWith(fontSize: 13),
                                 ),
                                 Text(
                                   _priceFormatter.format(sale.totalAmount),
-                                  style: const TextStyle(
+                                  style: theme.textTheme.bodyMedium?.copyWith(
                                     fontWeight: FontWeight.bold,
                                     fontSize: 14,
+                                    color: onSurface,
                                   ),
                                 ),
                               ],
@@ -465,13 +491,17 @@ class _SalesHistoryPageState extends State<SalesHistoryPage> {
                               mainAxisAlignment:
                                   MainAxisAlignment.spaceBetween,
                               children: [
-                                const Text(
+                                Text(
                                   'Dibayar',
-                                  style: TextStyle(fontSize: 13),
+                                  style: theme.textTheme.bodyMedium
+                                      ?.copyWith(fontSize: 13),
                                 ),
                                 Text(
                                   _priceFormatter.format(sale.paidAmount),
-                                  style: const TextStyle(fontSize: 13),
+                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                    fontSize: 13,
+                                    color: onSurface,
+                                  ),
                                 ),
                               ],
                             ),
@@ -480,13 +510,17 @@ class _SalesHistoryPageState extends State<SalesHistoryPage> {
                               mainAxisAlignment:
                                   MainAxisAlignment.spaceBetween,
                               children: [
-                                const Text(
+                                Text(
                                   'Kembalian',
-                                  style: TextStyle(fontSize: 13),
+                                  style: theme.textTheme.bodyMedium
+                                      ?.copyWith(fontSize: 13),
                                 ),
                                 Text(
                                   _priceFormatter.format(sale.changeAmount),
-                                  style: const TextStyle(fontSize: 13),
+                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                    fontSize: 13,
+                                    color: onSurface,
+                                  ),
                                 ),
                               ],
                             ),
@@ -497,9 +531,10 @@ class _SalesHistoryPageState extends State<SalesHistoryPage> {
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceBetween,
                                 children: [
-                                  const Text(
+                                  Text(
                                     'Sisa utang',
-                                    style: TextStyle(fontSize: 13),
+                                    style: theme.textTheme.bodyMedium
+                                        ?.copyWith(fontSize: 13),
                                   ),
                                   Text(
                                     _priceFormatter.format(sisaUtang),
@@ -512,13 +547,14 @@ class _SalesHistoryPageState extends State<SalesHistoryPage> {
                                 ],
                               ),
                               const SizedBox(height: 4),
-                              const Align(
+                              Align(
                                 alignment: Alignment.centerLeft,
                                 child: Text(
                                   'Sisa ini akan tercatat sebagai utang pelanggan.',
-                                  style: TextStyle(
+                                  style:
+                                      theme.textTheme.bodySmall?.copyWith(
                                     fontSize: 11,
-                                    color: Colors.grey,
+                                    color: onSurface.withOpacity(0.7),
                                   ),
                                 ),
                               ),
@@ -539,7 +575,7 @@ class _SalesHistoryPageState extends State<SalesHistoryPage> {
     );
   }
 
-  Widget _buildSectionTitle(String title) {
+  Widget _buildSectionTitle(String title, ThemeData theme) {
     return Row(
       children: [
         Container(
@@ -553,9 +589,10 @@ class _SalesHistoryPageState extends State<SalesHistoryPage> {
         const SizedBox(width: 6),
         Text(
           title,
-          style: const TextStyle(
+          style: theme.textTheme.bodyMedium?.copyWith(
             fontSize: 13,
             fontWeight: FontWeight.w600,
+            color: theme.colorScheme.onSurface,
           ),
         ),
       ],
@@ -566,6 +603,10 @@ class _SalesHistoryPageState extends State<SalesHistoryPage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final onSurface = theme.colorScheme.onSurface;
+    final isDark = theme.brightness == Brightness.dark;
+
     if (_isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -574,9 +615,16 @@ class _SalesHistoryPageState extends State<SalesHistoryPage> {
       return RefreshIndicator(
         onRefresh: _loadSales,
         child: ListView(
-          children: const [
-            SizedBox(height: 200),
-            Center(child: Text('Belum ada riwayat transaksi')),
+          children: [
+            const SizedBox(height: 200),
+            Center(
+              child: Text(
+                'Belum ada riwayat transaksi',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: onSurface,
+                ),
+              ),
+            ),
           ],
         ),
       );
@@ -596,15 +644,17 @@ class _SalesHistoryPageState extends State<SalesHistoryPage> {
             child: Container(
               padding: const EdgeInsets.all(4),
               decoration: BoxDecoration(
-                color: const Color(0xFFF3F6FF),
+                color: isDark
+                    ? theme.colorScheme.surfaceVariant.withOpacity(0.6)
+                    : const Color(0xFFF3F6FF),
                 borderRadius: BorderRadius.circular(30),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  _buildTabChip(0, 'Semua'),
-                  _buildTabChip(1, 'Lunas'),
-                  _buildTabChip(2, 'Utang'),
+                  _buildTabChip(0, 'Semua', theme),
+                  _buildTabChip(1, 'Lunas', theme),
+                  _buildTabChip(2, 'Utang', theme),
                 ],
               ),
             ),
@@ -627,7 +677,7 @@ class _SalesHistoryPageState extends State<SalesHistoryPage> {
                   child: Container(
                     margin: const EdgeInsets.only(bottom: 10),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: theme.cardColor,
                       borderRadius: BorderRadius.circular(18),
                       boxShadow: [
                         BoxShadow(
@@ -668,9 +718,11 @@ class _SalesHistoryPageState extends State<SalesHistoryPage> {
                                     Text(
                                       _priceFormatter
                                           .format(sale.totalAmount),
-                                      style: const TextStyle(
+                                      style: theme.textTheme.titleMedium
+                                          ?.copyWith(
                                         fontSize: 15,
                                         fontWeight: FontWeight.bold,
+                                        color: onSurface,
                                       ),
                                     ),
                                     Container(
@@ -696,16 +748,19 @@ class _SalesHistoryPageState extends State<SalesHistoryPage> {
                                 // tanggal
                                 Text(
                                   _dateFormatter.format(sale.createdAt),
-                                  style: const TextStyle(
-                                      fontSize: 11, color: Colors.grey),
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    fontSize: 11,
+                                    color: onSurface.withOpacity(0.7),
+                                  ),
                                 ),
                                 const SizedBox(height: 2),
                                 // nama pelanggan atau placeholder
                                 Text(
                                   sale.customerName ?? 'Pelanggan umum',
-                                  style: const TextStyle(
+                                  style: theme.textTheme.bodyMedium?.copyWith(
                                     fontSize: 12,
                                     fontWeight: FontWeight.w500,
+                                    color: onSurface,
                                   ),
                                 ),
                                 if (isUtang && sisaUtang > 0)
@@ -736,7 +791,7 @@ class _SalesHistoryPageState extends State<SalesHistoryPage> {
     );
   }
 
-  Widget _buildTabChip(int index, String label) {
+  Widget _buildTabChip(int index, String label, ThemeData theme) {
     final isActive = _tabIndex == index;
 
     return Expanded(
@@ -749,7 +804,7 @@ class _SalesHistoryPageState extends State<SalesHistoryPage> {
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 8),
           decoration: BoxDecoration(
-            color: isActive ? Colors.white : Colors.transparent,
+            color: isActive ? theme.cardColor : Colors.transparent,
             borderRadius: BorderRadius.circular(20),
           ),
           alignment: Alignment.center,
@@ -758,7 +813,9 @@ class _SalesHistoryPageState extends State<SalesHistoryPage> {
             style: TextStyle(
               fontSize: 12,
               fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
-              color: isActive ? _primaryBlue : Colors.grey[700],
+              color: isActive
+                  ? _primaryBlue
+                  : theme.colorScheme.onSurface.withOpacity(0.7),
             ),
           ),
         ),

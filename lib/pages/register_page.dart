@@ -28,9 +28,9 @@ class _RegisterPageState extends State<RegisterPage> {
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
 
-  // ==== FOTO PROFIL (OPSIONAL) ====
+  // FOTO PROFIL (OPSIONAL)
   final ImagePicker _picker = ImagePicker();
-  XFile? _pickedImage; // kalau null, tampilkan icon user
+  XFile? _pickedImage;
 
   static const Color _primaryBlue = Color(0xFF57A0D3);
   static const Color _darkBlue = Color(0xFF1F2C46);
@@ -47,30 +47,44 @@ class _RegisterPageState extends State<RegisterPage> {
   }
 
   InputDecoration _inputDecoration({
+    required BuildContext context,
     required String label,
     required IconData icon,
   }) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    final Color fillColor =
+        isDark ? const Color(0xFF020617) : const Color(0xFFF5F8FE);
+
+    final Color labelColor =
+        isDark ? Colors.white70 : Colors.grey.shade600;
+
+    final Color enabledBorderColor =
+        isDark ? const Color(0xFF4B5563) : Colors.transparent;
+
     return InputDecoration(
       labelText: label,
       prefixIcon: Icon(icon),
       prefixIconColor: _primaryBlue,
       filled: true,
-      fillColor: const Color(0xFFF5F8FE),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      fillColor: fillColor,
+      contentPadding:
+          const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(18),
         borderSide: BorderSide.none,
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(18),
-        borderSide: BorderSide.none,
+        borderSide: BorderSide(color: enabledBorderColor),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(18),
         borderSide: const BorderSide(color: _primaryBlue, width: 1.4),
       ),
       labelStyle: TextStyle(
-        color: Colors.grey.shade600,
+        color: labelColor,
         fontSize: 13,
       ),
     );
@@ -95,36 +109,59 @@ class _RegisterPageState extends State<RegisterPage> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (ctx) {
+        final theme = Theme.of(ctx);
+        final isDark = theme.brightness == Brightness.dark;
+
         return SafeArea(
-          child: Wrap(
-            children: [
-              ListTile(
-                leading: const Icon(Icons.photo_library_outlined),
-                title: const Text('Pilih dari Galeri'),
-                onTap: () {
-                  Navigator.of(ctx).pop();
-                  _pickImage(ImageSource.gallery);
-                },
+          child: Container(
+            decoration: BoxDecoration(
+              color: isDark ? theme.colorScheme.surface : Colors.white,
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(20),
               ),
-              ListTile(
-                leading: const Icon(Icons.photo_camera_outlined),
-                title: const Text('Ambil dari Kamera'),
-                onTap: () {
-                  Navigator.of(ctx).pop();
-                  _pickImage(ImageSource.camera);
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.delete_outline),
-                title: const Text('Hapus foto (kosongkan)'),
-                onTap: () {
-                  Navigator.of(ctx).pop();
-                  setState(() {
-                    _pickedImage = null;
-                  });
-                },
-              ),
-            ],
+            ),
+            child: Wrap(
+              children: [
+                ListTile(
+                  leading: const Icon(
+                    Icons.photo_library_outlined,
+                    color: _primaryBlue,
+                  ),
+                  title: const Text('Pilih dari Galeri'),
+                  onTap: () {
+                    Navigator.of(ctx).pop();
+                    _pickImage(ImageSource.gallery);
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(
+                    Icons.photo_camera_outlined,
+                    color: _primaryBlue,
+                  ),
+                  title: const Text('Ambil dari Kamera'),
+                  onTap: () {
+                    Navigator.of(ctx).pop();
+                    _pickImage(ImageSource.camera);
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(
+                    Icons.delete_outline,
+                    color: Colors.red,
+                  ),
+                  title: const Text(
+                    'Hapus foto (kosongkan)',
+                    style: TextStyle(color: Colors.red),
+                  ),
+                  onTap: () {
+                    Navigator.of(ctx).pop();
+                    setState(() {
+                      _pickedImage = null;
+                    });
+                  },
+                ),
+              ],
+            ),
           ),
         );
       },
@@ -189,25 +226,103 @@ class _RegisterPageState extends State<RegisterPage> {
     });
   }
 
+  // =========================
+  // DATE PICKER TANGGAL LAHIR
+  // =========================
+  Future<void> _pickBirthDate() async {
+    final theme = Theme.of(context);
+    final now = DateTime.now();
+
+    // default initial date: 20 tahun yang lalu
+    DateTime initial = DateTime(now.year - 20, now.month, now.day);
+
+    if (_birthDateController.text.isNotEmpty) {
+      final parsed = DateTime.tryParse(_birthDateController.text);
+      if (parsed != null) {
+        initial = parsed;
+      }
+    }
+
+    final firstDate = DateTime(1950);
+    final lastDate = now;
+
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: initial.isAfter(lastDate) ? lastDate : initial,
+      firstDate: firstDate,
+      lastDate: lastDate,
+      builder: (ctx, child) {
+        final baseTheme = Theme.of(ctx);
+        final colorScheme = baseTheme.colorScheme.copyWith(
+          primary: _primaryBlue,
+          onPrimary: Colors.white,
+          secondary: _primaryBlue,
+        );
+
+        return Theme(
+          data: baseTheme.copyWith(
+            colorScheme: colorScheme,
+            textButtonTheme: TextButtonThemeData(
+              style: TextButton.styleFrom(
+                foregroundColor: _primaryBlue, // warna tombol OK / Batal
+              ),
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (picked != null) {
+      final y = picked.year.toString().padLeft(4, '0');
+      final m = picked.month.toString().padLeft(2, '0');
+      final d = picked.day.toString().padLeft(2, '0');
+      setState(() {
+        _birthDateController.text = '$y-$m-$d'; // YYYY-MM-DD
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    final Color titleColor = isDark ? Colors.white : _darkBlue;
+    final Color subtitleColor =
+        isDark ? Colors.white70 : Colors.grey.shade700;
+
+    final Color cardColor = isDark ? theme.cardColor : Colors.white;
+
+    final Color cardBorderColor = isDark
+        ? Colors.white.withOpacity(0.05)
+        : Colors.white.withOpacity(0.7);
+
+    // Background: dark = solid, light = gradient (sama seperti Login)
+    final BoxDecoration backgroundDecoration = isDark
+        ? BoxDecoration(
+            color: theme.scaffoldBackgroundColor,
+          )
+        : const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Color(0xFFe8f4fb),
+                Color(0xFFc3ddf3),
+              ],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
+          );
+
     return Scaffold(
-      // sama seperti login: background gradient biru
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              Color(0xFFe8f4fb),
-              Color(0xFFc3ddf3),
-            ],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
-        ),
+        decoration: backgroundDecoration,
         child: SafeArea(
           child: Center(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -217,15 +332,15 @@ class _RegisterPageState extends State<RegisterPage> {
                       IconButton(
                         onPressed: () => Navigator.of(context).pop(),
                         icon: const Icon(Icons.arrow_back_rounded),
-                        color: _darkBlue,
+                        color: titleColor,
                       ),
                       const SizedBox(width: 4),
-                      const Text(
+                      Text(
                         'Registrasi Kasir',
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.w600,
-                          color: _darkBlue,
+                          color: titleColor,
                         ),
                       ),
                     ],
@@ -239,13 +354,13 @@ class _RegisterPageState extends State<RegisterPage> {
                       'Daftarkan diri Anda sebagai kasir. Admin akan meninjau dan menyetujui akun Anda.',
                       style: TextStyle(
                         fontSize: 12,
-                        color: Colors.grey.shade700,
+                        color: subtitleColor,
                       ),
                     ),
                   ),
                   const SizedBox(height: 20),
 
-                  // AVATAR cakep dengan border
+                  // Avatar
                   Center(
                     child: Stack(
                       children: [
@@ -271,15 +386,19 @@ class _RegisterPageState extends State<RegisterPage> {
                           ),
                           child: CircleAvatar(
                             radius: 46,
-                            backgroundColor: const Color(0xFFE7F0FF),
+                            backgroundColor: isDark
+                                ? theme.colorScheme.surfaceVariant
+                                : const Color(0xFFE7F0FF),
                             backgroundImage: _pickedImage != null
                                 ? FileImage(File(_pickedImage!.path))
                                 : null,
                             child: _pickedImage == null
-                                ? const Icon(
+                                ? Icon(
                                     Icons.person_outline,
                                     size: 48,
-                                    color: Color(0xFF90A4CE),
+                                    color: isDark
+                                        ? Colors.white54
+                                        : const Color(0xFF90A4CE),
                                   )
                                 : null,
                           ),
@@ -332,9 +451,10 @@ class _RegisterPageState extends State<RegisterPage> {
                             : const Color(0xFFFFE8E8),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color: _message!.toLowerCase().contains('berhasil')
-                              ? const Color(0xFF46A36A)
-                              : const Color(0xFFD64545),
+                          color:
+                              _message!.toLowerCase().contains('berhasil')
+                                  ? const Color(0xFF46A36A)
+                                  : const Color(0xFFD64545),
                         ),
                       ),
                       child: Row(
@@ -372,18 +492,20 @@ class _RegisterPageState extends State<RegisterPage> {
                     width: double.infinity,
                     padding: const EdgeInsets.fromLTRB(20, 18, 20, 20),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: cardColor,
                       borderRadius: BorderRadius.circular(26),
                       boxShadow: [
                         BoxShadow(
                           blurRadius: 22,
                           spreadRadius: 2,
-                          color: Colors.black.withOpacity(0.08),
+                          color: isDark
+                              ? Colors.black.withOpacity(0.6)
+                              : Colors.black.withOpacity(0.08),
                           offset: const Offset(0, 14),
                         ),
                       ],
                       border: Border.all(
-                        color: Colors.white.withOpacity(0.7),
+                        color: cardBorderColor,
                       ),
                     ),
                     child: Form(
@@ -397,7 +519,7 @@ class _RegisterPageState extends State<RegisterPage> {
                               style: TextStyle(
                                 fontSize: 15,
                                 fontWeight: FontWeight.w600,
-                                color: _darkBlue,
+                                color: titleColor,
                               ),
                             ),
                           ),
@@ -407,11 +529,14 @@ class _RegisterPageState extends State<RegisterPage> {
                           TextFormField(
                             controller: _nameController,
                             decoration: _inputDecoration(
+                              context: context,
                               label: 'Nama lengkap',
                               icon: Icons.person_outline,
                             ),
                             validator: (v) =>
-                                v == null || v.isEmpty ? 'Nama wajib diisi' : null,
+                                v == null || v.isEmpty
+                                    ? 'Nama wajib diisi'
+                                    : null,
                           ),
                           const SizedBox(height: 12),
 
@@ -420,11 +545,14 @@ class _RegisterPageState extends State<RegisterPage> {
                             controller: _emailController,
                             keyboardType: TextInputType.emailAddress,
                             decoration: _inputDecoration(
+                              context: context,
                               label: 'Email',
                               icon: Icons.email_outlined,
                             ),
                             validator: (v) =>
-                                v == null || v.isEmpty ? 'Email wajib diisi' : null,
+                                v == null || v.isEmpty
+                                    ? 'Email wajib diisi'
+                                    : null,
                           ),
                           const SizedBox(height: 12),
 
@@ -433,27 +561,39 @@ class _RegisterPageState extends State<RegisterPage> {
                             controller: _phoneController,
                             keyboardType: TextInputType.phone,
                             decoration: _inputDecoration(
+                              context: context,
                               label: 'No. telepon',
                               icon: Icons.phone_iphone,
                             ),
-                            validator: (v) => v == null || v.isEmpty
-                                ? 'No. telepon wajib diisi'
-                                : null,
+                            validator: (v) =>
+                                v == null || v.isEmpty
+                                    ? 'No. telepon wajib diisi'
+                                    : null,
                           ),
                           const SizedBox(height: 12),
 
-                          // Tanggal lahir
+                          // Tanggal lahir (PAKAI DATE PICKER)
                           TextFormField(
                             controller: _birthDateController,
+                            readOnly: true,
                             decoration: _inputDecoration(
+                              context: context,
                               label: 'Tanggal lahir (YYYY-MM-DD)',
                               icon: Icons.cake_outlined,
+                            ).copyWith(
+                              suffixIcon: const Icon(
+                                Icons.calendar_today_rounded,
+                                size: 18,
+                                color: _primaryBlue,
+                              ),
                             ),
+                            onTap: _pickBirthDate,
                             validator: (v) {
                               if (v == null || v.isEmpty) {
                                 return 'Tanggal lahir wajib diisi';
                               }
-                              final regex = RegExp(r'^\d{4}-\d{2}-\d{2}$');
+                              final regex =
+                                  RegExp(r'^\d{4}-\d{2}-\d{2}$');
                               if (!regex.hasMatch(v)) {
                                 return 'Format harus YYYY-MM-DD, contoh 2000-10-01';
                               }
@@ -467,6 +607,7 @@ class _RegisterPageState extends State<RegisterPage> {
                             controller: _passwordController,
                             obscureText: _obscurePassword,
                             decoration: _inputDecoration(
+                              context: context,
                               label: 'Password',
                               icon: Icons.lock_outline,
                             ).copyWith(
@@ -476,18 +617,20 @@ class _RegisterPageState extends State<RegisterPage> {
                                       ? Icons.visibility_off_rounded
                                       : Icons.visibility_rounded,
                                   size: 20,
-                                  color: Colors.grey.shade600,
+                                  color: subtitleColor,
                                 ),
                                 onPressed: () {
                                   setState(() {
-                                    _obscurePassword = !_obscurePassword;
+                                    _obscurePassword =
+                                        !_obscurePassword;
                                   });
                                 },
                               ),
                             ),
-                            validator: (v) => v == null || v.length < 6
-                                ? 'Password minimal 6 karakter'
-                                : null,
+                            validator: (v) =>
+                                v == null || v.length < 6
+                                    ? 'Password minimal 6 karakter'
+                                    : null,
                           ),
                           const SizedBox(height: 12),
 
@@ -496,6 +639,7 @@ class _RegisterPageState extends State<RegisterPage> {
                             controller: _passwordConfirmController,
                             obscureText: _obscureConfirmPassword,
                             decoration: _inputDecoration(
+                              context: context,
                               label: 'Konfirmasi password',
                               icon: Icons.lock_person_outlined,
                             ).copyWith(
@@ -505,7 +649,7 @@ class _RegisterPageState extends State<RegisterPage> {
                                       ? Icons.visibility_off_rounded
                                       : Icons.visibility_rounded,
                                   size: 20,
-                                  color: Colors.grey.shade600,
+                                  color: subtitleColor,
                                 ),
                                 onPressed: () {
                                   setState(() {
@@ -528,13 +672,16 @@ class _RegisterPageState extends State<RegisterPage> {
                             width: double.infinity,
                             height: 48,
                             child: _isLoading
-                                ? const Center(child: CircularProgressIndicator())
+                                ? const Center(
+                                    child: CircularProgressIndicator(),
+                                  )
                                 : ElevatedButton(
                                     onPressed: _register,
                                     style: ElevatedButton.styleFrom(
                                       padding: EdgeInsets.zero,
                                       shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(20),
+                                        borderRadius:
+                                            BorderRadius.circular(20),
                                       ),
                                       elevation: 0,
                                       backgroundColor: Colors.transparent,
@@ -549,11 +696,11 @@ class _RegisterPageState extends State<RegisterPage> {
                                           begin: Alignment.centerLeft,
                                           end: Alignment.centerRight,
                                         ),
-                                        borderRadius: BorderRadius.circular(20),
+                                        borderRadius:
+                                            BorderRadius.circular(20),
                                       ),
-                                      child: Container(
-                                        alignment: Alignment.center,
-                                        child: const Text(
+                                      child: const Center(
+                                        child: Text(
                                           'Daftar Sekarang',
                                           style: TextStyle(
                                             fontSize: 15,
